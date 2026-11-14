@@ -1,22 +1,36 @@
 openapi: 3.0.3
 info:
-  title: ZEEKR Brand Site API
-  version: 0.1.0
+  title: ZEEKR Brand Site API (非官方技术演示)
+  version: 1.0.0
   description: |
-    P0 初始契约骨架。路径与 docs/delivery/design.md 中 RESOURCE_ROUTES 保持一致，
-    改路径必须同时改契约、api 常量与前端调用方。
-    COMPLIANCE: 本契约不包含任何官方文案原文，字段描述为工程占位。
+    P1 设计契约定稿（待签收）。本文件与 docs/delivery/design.md 的 RESOURCE_ROUTES、
+    apps/api/src/contract.ts、前端 src/lib/contract.ts 保持一致；改路径必须四处同步。
+
+    合规口径：本工程为非官方技术演示，与品牌方无关联或背书。
+    所有车型、门店、资讯均为示意数据；图片字段引用 placeholder/ 下的占位资源；
+    不含品牌标识、官方车型图或官方宣传文案原文。
+
+    路径说明：paths 使用后端内部路径（无 /api 前缀）。对外经 Nginx 以 /api 前缀暴露，
+    /api/vehicles 会转发为后端 /vehicles，servers 中的 URL 已包含该前缀。
 servers:
   - url: http://localhost:3001
-    description: 本地开发
-  - url: https://api.example.com
-    description: 生产占位（部署时覆盖）
+    description: 本地直连后端
+  - url: https://stage.zeekr.www.xueyuanzong.top/api
+    description: staging（经 Nginx 反代）
+  - url: https://zeekr.www.xueyuanzong.top/api
+    description: production（经 Nginx 反代）
 tags:
   - name: health
+    description: 健康检查
   - name: vehicles
+    description: 车型（示意数据）
   - name: test-drive-leads
+    description: 预约试驾线索（演示链路）
   - name: stores
+    description: 门店（示意数据）
   - name: news
+    description: 品牌资讯（示意文案）
+
 paths:
   /health:
     get:
@@ -28,13 +42,17 @@ paths:
           description: 服务可用
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/Health'
+              schema: { $ref: '#/components/schemas/Health' }
+        '503':
+          description: 依赖不可用
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
 
   /vehicles:
     get:
       tags: [vehicles]
-      summary: 车型列表
+      summary: 车型列表（分页 + 筛选）
       operationId: listVehicles
       parameters:
         - name: page
@@ -43,19 +61,25 @@ paths:
         - name: pageSize
           in: query
           schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: series
+          in: query
+          description: 车系示意编码
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string, enum: [DRAFT, PUBLISHED, ARCHIVED], default: PUBLISHED }
       responses:
         '200':
           description: 分页车型列表
           content:
             application/json:
-              schema:
-                type: object
-                required: [items, total]
-                properties:
-                  items:
-                    type: array
-                    items: { $ref: '#/components/schemas/Vehicle' }
-                  total: { type: integer }
+              schema: { $ref: '#/components/schemas/VehicleList' }
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
   /vehicles/{slug}:
     get:
       tags: [vehicles]
@@ -65,20 +89,29 @@ paths:
         - name: slug
           in: path
           required: true
-          schema: { type: string }
+          description: 车型示意 slug
+          schema: { type: string, minLength: 1, maxLength: 64 }
       responses:
         '200':
           description: 车型详情
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Vehicle' }
-        '404': { description: 车型不存在 }
+              schema: { $ref: '#/components/schemas/VehicleDetail' }
+        '404':
+          description: 车型不存在
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
 
   /test-drive-leads:
     post:
       tags: [test-drive-leads]
-      summary: 提交预约试驾线索
+      summary: 提交预约试驾线索（仅演示，不发起真实邀约）
       operationId: createTestDriveLead
+      description: |
+        字段最小化：仅采集演示所需信息。必须 consent=true 方可提交。
+        成功响应只返回受理编号与时间，不回传手机号等个人信息。
+        该接口需配置速率限制；日志中手机号须脱敏。
       requestBody:
         required: true
         content:
@@ -86,11 +119,20 @@ paths:
             schema: { $ref: '#/components/schemas/TestDriveLeadInput' }
       responses:
         '201':
-          description: 线索已创建
+          description: 线索已受理
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/TestDriveLead' }
-        '422': { description: 参数校验失败 }
+              schema: { $ref: '#/components/schemas/TestDriveLeadReceipt' }
+        '422':
+          description: 参数校验失败或未勾选同意
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '429':
+          description: 触发速率限制
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
 
   /stores:
     get:
@@ -100,89 +142,227 @@ paths:
       parameters:
         - name: city
           in: query
+          description: 按城市过滤（示意值）
           schema: { type: string }
       responses:
         '200':
           description: 门店列表
           content:
             application/json:
-              schema:
-                type: array
-                items: { $ref: '#/components/schemas/Store' }
+              schema: { $ref: '#/components/schemas/StoreList' }
 
   /news:
     get:
       tags: [news]
-      summary: 资讯列表
+      summary: 资讯列表（仅已发布）
       operationId: listNews
       parameters:
         - name: page
           in: query
           schema: { type: integer, minimum: 1, default: 1 }
+        - name: pageSize
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: tag
+          in: query
+          schema: { type: string, enum: [BRAND, TECH, EVENT] }
       responses:
         '200':
-          description: 资讯列表
+          description: 分页资讯列表
           content:
             application/json:
-              schema:
-                type: object
-                required: [items, total]
-                properties:
-                  items:
-                    type: array
-                    items: { $ref: '#/components/schemas/NewsArticle' }
-                  total: { type: integer }
+              schema: { $ref: '#/components/schemas/NewsList' }
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /news/{slug}:
+    get:
+      tags: [news]
+      summary: 资讯详情
+      operationId: getNewsArticle
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 64 }
+      responses:
+        '200':
+          description: 资讯详情
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NewsArticleDetail' }
+        '404':
+          description: 资讯不存在或未发布
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
 
 components:
   schemas:
+    PaginationMeta:
+      type: object
+      required: [page, pageSize, total]
+      properties:
+        page: { type: integer, minimum: 1 }
+        pageSize: { type: integer, minimum: 1, maximum: 100 }
+        total: { type: integer, minimum: 0 }
+
     Health:
       type: object
-      required: [status, service, version, timestamp]
+      required: [status, service, version, timestamp, db]
       properties:
-        status: { type: string, enum: [ok] }
-        service: { type: string }
-        version: { type: string }
+        status: { type: string, enum: [ok, degraded] }
+        service: { type: string, example: zeekr-api }
+        version: { type: string, example: 1.0.0 }
         timestamp: { type: string, format: date-time }
+        db: { type: string, enum: [ok, unavailable], description: MySQL 连通状态 }
+
     Vehicle:
       type: object
-      required: [id, slug, name]
+      required: [id, slug, name, series, status]
       properties:
         id: { type: string, format: uuid }
-        slug: { type: string }
-        name: { type: string }
+        slug: { type: string, example: demo-sedan-01 }
+        name: { type: string, example: 示意车型 A }
+        series: { type: string, example: DEMO-S }
+        tagline: { type: string, example: 工程示意文案，非官方宣传语 }
+        priceMin: { type: integer, description: 单位：元（示意） }
+        priceMax: { type: integer, description: 单位：元（示意） }
+        rangeKm: { type: integer, description: 续航示意值（公里） }
+        batteryKwh: { type: integer, description: 电池容量示意值 }
+        zeroToHundred: { type: number, format: float, description: 加速示意值（秒） }
+        seats: { type: integer, example: 5 }
+        driveType: { type: string, example: AWD }
+        imageKey: { type: string, description: 占位图键，指向 placeholder/ 目录, example: placeholder/vehicle-a.svg }
+        badge: { type: string, example: 示意标签 }
+        sortOrder: { type: integer, default: 0 }
+        status: { type: string, enum: [DRAFT, PUBLISHED, ARCHIVED] }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
-    TestDriveLeadInput:
-      type: object
-      required: [vehicle, name, phone]
-      properties:
-        vehicle: { type: string }
-        name: { type: string, maxLength: 64 }
-        phone:
-          type: string
-          pattern: '^1[3-9]\\d{9}$'
-        storeId: { type: string }
-    TestDriveLead:
+
+    VehicleDetail:
       allOf:
-        - $ref: '#/components/schemas/TestDriveLeadInput'
+        - $ref: '#/components/schemas/Vehicle'
         - type: object
           properties:
-            id: { type: string, format: uuid }
-            createdAt: { type: string, format: date-time }
+            highlights:
+              type: array
+              description: 示意参数组
+              items: { $ref: '#/components/schemas/VehicleHighlight' }
+            galleryKeys:
+              type: array
+              description: 占位图键列表
+              items: { type: string }
+
+    VehicleHighlight:
+      type: object
+      required: [label, value]
+      properties:
+        label: { type: string, example: 示意续航 }
+        value: { type: string, example: 600 km }
+
+    VehicleList:
+      type: object
+      required: [items, total, page, pageSize]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Vehicle' }
+        total: { type: integer }
+        page: { type: integer }
+        pageSize: { type: integer }
+
+    TestDriveLeadInput:
+      type: object
+      required: [vehicleSlug, name, phone, consent]
+      properties:
+        vehicleSlug: { type: string, minLength: 1, maxLength: 64 }
+        name: { type: string, minLength: 1, maxLength: 64 }
+        phone:
+          type: string
+          pattern: '^1[3-9]\d{9}$'
+          description: 仅演示校验用，日志中须脱敏
+        city: { type: string, maxLength: 32 }
+        storeId: { type: string, maxLength: 64 }
+        preferredAt: { type: string, format: date-time }
+        consent:
+          type: boolean
+          description: 必须为 true；表示知悉「仅用于技术演示，不会发起真实邀约」
+          enum: [true]
+
+    TestDriveLeadReceipt:
+      type: object
+      description: 不回传任何个人信息
+      required: [id, createdAt, message]
+      properties:
+        id: { type: string, format: uuid, description: 受理编号 }
+        createdAt: { type: string, format: date-time }
+        message: { type: string, example: 已受理（技术演示，不会发起真实邀约） }
+
     Store:
       type: object
       required: [id, name, city, address]
       properties:
         id: { type: string, format: uuid }
-        name: { type: string }
-        city: { type: string }
-        address: { type: string }
+        name: { type: string, example: 示意体验中心 A }
+        city: { type: string, example: 上海 }
+        district: { type: string, example: 浦东新区 }
+        address: { type: string, example: 示意地址 1 号 }
+        phone: { type: string, example: '0000-0000000' }
+        businessHours: { type: string, example: '10:00-18:00' }
+        latitude: { type: number, format: double, description: 示意坐标 }
+        longitude: { type: number, format: double, description: 示意坐标 }
+
+    StoreList:
+      type: object
+      required: [items, total]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Store' }
+        total: { type: integer }
+
     NewsArticle:
       type: object
-      required: [id, slug, title]
+      required: [id, slug, title, status]
       properties:
         id: { type: string, format: uuid }
         slug: { type: string }
-        title: { type: string }
-        summary: { type: string }
+        title: { type: string, example: 工程演示资讯标题 }
+        summary: { type: string, example: 工程示意摘要，非官方文案 }
+        coverKey: { type: string, example: placeholder/news-01.svg }
+        tag: { type: string, enum: [BRAND, TECH, EVENT] }
+        status: { type: string, enum: [DRAFT, PUBLISHED, ARCHIVED] }
         publishedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+
+    NewsArticleDetail:
+      allOf:
+        - $ref: '#/components/schemas/NewsArticle'
+        - type: object
+          properties:
+            body: { type: string, description: 示意正文（纯文本，不含官方文案） }
+
+    NewsList:
+      type: object
+      required: [items, total, page, pageSize]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/NewsArticle' }
+        total: { type: integer }
+        page: { type: integer }
+        pageSize: { type: integer }
+
+    Error:
+      type: object
+      description: 统一错误响应（Problem+JSON 风格，不回显内部堆栈）
+      required: [status, title, detail, traceId]
+      properties:
+        status: { type: integer, example: 404 }
+        title: { type: string, example: Not Found }
+        detail: { type: string, example: 资源不存在 }
+        traceId: { type: string, description: 用于日志关联的追踪 ID }

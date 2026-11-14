@@ -1,44 +1,104 @@
-// P0 骨架：仅定义数据源与基础模型，不包含任何业务种子数据。
-// 真实迁移在后续迭代生成；本文件保证 prisma generate 可用。
+// P1 数据模型定稿（设计契约，待签收）。
+// 数据库：腾讯云 MySQL 8.0 / utf8mb4；两环境分库 zeekr_stage / zeekr_prod。
+// 所有业务数据为示意值；不得写入官方素材、官方文案或真实用户个人信息。
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
+enum VehicleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum NewsTag {
+  BRAND
+  TECH
+  EVENT
+}
+
+/// 示意车型
 model Vehicle {
-  id        String   @id @default(uuid())
-  slug      String   @unique
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String        @id @default(uuid())
+  slug           String        @unique
+  name           String
+  series         String
+  tagline        String?       @db.VarChar(255)
+  priceMin       Int?          // 单位：元（示意）
+  priceMax       Int?          // 单位：元（示意）
+  rangeKm        Int?          // 续航示意值
+  batteryKwh     Int?
+  zeroToHundred  Float?
+  seats          Int?          @default(5)
+  driveType      String?       @db.VarChar(32)
+  imageKey       String?       @db.VarChar(255) // 指向 placeholder/ 目录
+  badge          String?       @db.VarChar(64)
+  sortOrder      Int           @default(0)
+  status         VehicleStatus @default(DRAFT)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([status, sortOrder])
+  @@index([series])
 }
 
+/// 预约试驾线索（演示链路）；字段最小化，日志中手机号须脱敏
 model TestDriveLead {
-  id        String   @id @default(uuid())
-  vehicle   String
-  name      String
-  phone     String
-  storeId   String?
-  createdAt DateTime @default(now())
+  id           String   @id @default(uuid())
+  vehicleSlug  String   @db.VarChar(64)
+  name         String   @db.VarChar(64)
+  phone        String   @db.VarChar(20)
+  city         String?  @db.VarChar(32)
+  storeId      String?  @db.VarChar(64)
+  preferredAt  DateTime?
+  consent      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([vehicleSlug, createdAt])
+  @@index([createdAt])
 }
 
+/// 示意门店
 model Store {
-  id        String   @id @default(uuid())
-  name      String
-  city      String
-  address   String
-  createdAt DateTime @default(now())
+  id             String   @id @default(uuid())
+  name           String
+  city           String   @db.VarChar(32)
+  district       String?  @db.VarChar(64)
+  address        String
+  phone          String?  @db.VarChar(32)
+  businessHours  String?  @db.VarChar(64)
+  latitude       Decimal? @db.Decimal(9, 6)
+  longitude      Decimal? @db.Decimal(9, 6)
+  createdAt      DateTime @default(now())
+
+  @@index([city])
 }
 
+/// 示意资讯
 model NewsArticle {
-  id          String   @id @default(uuid())
-  slug        String   @unique
+  id          String        @id @default(uuid())
+  slug        String        @unique
   title       String
-  summary     String?
+  summary     String?       @db.VarChar(512)
+  body        String?       @db.Text
+  coverKey    String?       @db.VarChar(255)
+  tag         NewsTag       @default(BRAND)
+  status      ContentStatus @default(DRAFT)
   publishedAt DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime      @default(now())
+
+  @@index([status, publishedAt])
+  @@index([tag])
 }

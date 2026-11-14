@@ -16,7 +16,7 @@
 | 前端 | Next.js（App Router）+ TypeScript |
 | 后端 | NestJS + TypeScript |
 | ORM | Prisma |
-| 数据库 | PostgreSQL |
+| 数据库 | MySQL 8.0（Prisma） |
 | CI | GitHub Actions（Node 20） |
 
 ## 目录结构
@@ -45,21 +45,21 @@ reports/                硬门禁与测试日志（不入库）
 | `API_DIR` | `apps/api` | 后端根目录，脚本与 CI 共用 |
 | `BASE_PATH` | `/` | 前端路由前缀（Next.js `basePath`） |
 | `API_BASE_URL` | `http://localhost:3001` | 前端访问后端的地址 |
-| `DATABASE_URL` | `postgresql://postgres:postgres@localhost:5432/zeekr` | Prisma 连接串 |
+| `DATABASE_URL` | `mysql://zeekr:zeekr@127.0.0.1:3306/zeekr` | Prisma 连接串 |
 
 完整定义见 `docs/delivery/design.md`。脚本里禁止出现 `cd backend` / `cd frontend` 这类臆造路径，一律引用上述常量。
 
 ## 本地启动
 
-环境要求：Node 20+、npm 10+、PostgreSQL 14+（可选，`apps/api` 单测与契约测试不依赖真实库）。
+环境要求：Node 20+、npm 10+、MySQL 8.0+（可选，`apps/api` 单测与契约测试不依赖真实库）。
 
 ```bash
 # 1. 安装依赖（仓库不提交 node_modules，必须现场安装）
 npm ci --prefix apps/web
 npm ci --prefix apps/api
 
-# 2. 启动 PostgreSQL 后初始化数据库（可选，仅本地联调需要）
-export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/zeekr"
+# 2. 启动 MySQL 后初始化数据库（可选，仅本地联调需要）
+export DATABASE_URL="mysql://zeekr:zeekr@127.0.0.1:3306/zeekr"
 npm run prisma:generate --prefix apps/api
 export $(grep -v '^#' .env.local 2>/dev/null | xargs) || true
 

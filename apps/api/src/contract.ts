@@ -4,7 +4,7 @@ export const API_BASE_URL =
 
 export const DATABASE_URL =
   process.env.DATABASE_URL ??
-  'postgresql://postgres:postgres@localhost:5432/zeekr';
+  'mysql://zeekr:zeekr@127.0.0.1:3306/zeekr';
 
 export const PORT = Number(process.env.PORT ?? 3001);
 
