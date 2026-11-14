@@ -1,0 +1,156 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 工程契约常量（docs/delivery/design.md 的镜像，改这里必须同步改文档）
+env:
+  NODE_VERSION: '20'
+  WEB_DIR: apps/web
+  API_DIR: apps/api
+  OPENAPI_SPEC: docs/api/openapi.yaml
+  DESIGN_DOC: docs/delivery/design.md
+  # GitHub 境外 runner 使用官方源；沙箱侧的 npmmirror 不得泄漏到 CI
+  NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  web:
+    name: web (lint / typecheck / build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.WEB_DIR }}/package-lock.json
+
+      - name: Assert registry
+        run: |
+          echo "registry=$(npm config get registry)"
+          test "$(npm config get registry)" = "https://registry.npmjs.org/"
+
+      - name: Install
+        working-directory: apps/web
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint
+        working-directory: apps/web
+        run: npm run lint
+
+      - name: Typecheck
+        working-directory: apps/web
+        run: npm run typecheck
+
+      - name: Build
+        working-directory: apps/web
+        run: npm run build
+        env:
+          API_BASE_URL: http://localhost:3001
+
+  api:
+    name: api (lint / typecheck / test / contract)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: zeekr
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d zeekr"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/zeekr
+      API_BASE_URL: http://localhost:3001
+      PORT: '3001'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.API_DIR }}/package-lock.json
+
+      - name: Install
+        working-directory: apps/api
+        run: npm ci --no-audit --no-fund
+
+      - name: Prisma generate
+        working-directory: apps/api
+        run: npm run prisma:generate
+
+      - name: Lint
+        working-directory: apps/api
+        run: npm run lint
+
+      - name: Typecheck
+        working-directory: apps/api
+        run: npm run typecheck
+
+      - name: Unit tests
+        working-directory: apps/api
+        run: npm run test
+
+      - name: Contract tests
+        working-directory: apps/api
+        run: npm run test:contract
+
+  contract-check:
+    name: contract-check (openapi + design)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify required contract files
+        run: |
+          set -euo pipefail
+          for f in "$OPENAPI_SPEC" "$DESIGN_DOC"; do
+            if [ ! -s "$f" ]; then
+              echo "::error::缺必填契约文件或为空: $f" >&2
+              exit 1
+            fi
+            echo "ok: $f ($(wc -c < "$f") bytes)"
+          done
+
+      - name: Verify openapi header
+        run: |
+          set -euo pipefail
+          head -1 "$OPENAPI_SPEC" | grep -Eq '^openapi: *3\.' || {
+            echo "::error::$OPENAPI_SPEC 首行不是 openapi: 3.x" >&2
+            exit 1
+          }
+
+      - name: Forbidden legacy paths
+        run: |
+          set -euo pipefail
+          # 断言块本身不参与扫描，避免命中自身的检查语句
+          pattern="cd (backend|frontend)([[:space:]]|$)"
+          hits=$(grep -rIn --include='*.sh' --include='*.yml' --include='*.yaml' -E "$pattern" scripts sop 2>/dev/null || true)
+          if [ -n "$hits" ]; then
+            printf '%s\n' "$hits" >&2
+            echo "::error::发现硬编码切换目录路径（应使用 design.md 常量）" >&2
+            exit 1
+          fi
+          echo 'no legacy cd paths'
+
+      - name: Forbidden tracked artifacts
+        run: |
+          set -euo pipefail
+          if git ls-files | grep -E '(^|/)(node_modules|dist|\.next|reports)/|(^|/)\.env([^.]|$)'; then
+            echo "::error::禁止提交 node_modules / dist / .next / .env / reports" >&2
+            exit 1
+          fi
+          echo 'working tree clean of artifacts'

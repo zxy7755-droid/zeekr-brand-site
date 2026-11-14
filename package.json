@@ -1,0 +1,17 @@
+{
+  "name": "zeekr-brand-site",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ZEEKR Brand Site - monorepo root (Next.js web + NestJS api)",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "lint": "npm run lint --prefix apps/web && npm run lint --prefix apps/api",
+    "typecheck": "npm run typecheck --prefix apps/web && npm run typecheck --prefix apps/api",
+    "test": "npm run test --prefix apps/api",
+    "build": "npm run build --prefix apps/web",
+    "test:contract": "npm run test:contract --prefix apps/api",
+    "gate": "bash scripts/hard-gate.sh"
+  }
+}

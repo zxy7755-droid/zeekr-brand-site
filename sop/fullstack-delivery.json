@@ -1,0 +1,139 @@
+{
+  "id": "zeekr-fullstack-delivery",
+  "name": "全栈交付 SOP（P0）",
+  "version": 1,
+  "sandboxProfileId": "zeekr-docker",
+  "description": "澄清 → 设计含 OpenAPI → 前端实现∥后端实现 → 独立评审∥独立评审 → 硬门禁 → 人工签收 → 交付汇总开 PR。DAG 结构：仅用 rejectTo + maxReworks 表达返工，不画回边。",
+  "contract": {
+    "doc": "docs/delivery/design.md",
+    "webDir": "apps/web",
+    "apiDir": "apps/api",
+    "openapiSpec": "docs/api/openapi.yaml",
+    "hardGate": "scripts/hard-gate.sh",
+    "hardGateLog": "reports/hard-gate.log",
+    "baseBranch": "main",
+    "workBranchPrefix": "feature/",
+    "forbidden": ["cd backend", "cd frontend", "node_modules", "dist", ".next", ".env"],
+    "notes": "路径常量与 BASE_PATH / API_BASE_URL / DATABASE_URL 在设计阶段定死，脚本与实现共用同一常量"
+  },
+  "nodes": [
+    {
+      "id": "clarify",
+      "name": "需求澄清",
+      "type": "agent",
+      "agentId": "zeekr-fullstack-clarify",
+      "maxAttempts": 2,
+      "maxReworks": 0,
+      "artifactOutputs": [
+        { "name": "clarify", "path": "requirement.md", "mediaType": "text/markdown", "required": true }
+      ],
+      "position": { "x": 100, "y": 260 }
+    },
+    {
+      "id": "design",
+      "name": "设计（含 OpenAPI 契约）",
+      "type": "agent",
+      "agentId": "zeekr-fullstack-design",
+      "maxAttempts": 2,
+      "maxReworks": 1,
+      "artifactOutputs": [
+        { "name": "design", "path": "design.md", "mediaType": "text/markdown", "required": true },
+        { "name": "openapi", "path": "docs/api/openapi.yaml", "mediaType": "application/yaml", "required": true }
+      ],
+      "position": { "x": 340, "y": 260 }
+    },
+    {
+      "id": "web-implement",
+      "name": "前端实现",
+      "type": "agent",
+      "agentId": "zeekr-fullstack-web",
+      "maxAttempts": 2,
+      "maxReworks": 2,
+      "artifactOutputs": [
+        { "name": "web", "path": "apps/web", "mediaType": "application/vnd.code", "required": true }
+      ],
+      "position": { "x": 600, "y": 120 }
+    },
+    {
+      "id": "api-implement",
+      "name": "后端实现",
+      "type": "agent",
+      "agentId": "zeekr-fullstack-api",
+      "maxAttempts": 2,
+      "maxReworks": 2,
+      "artifactOutputs": [
+        { "name": "api", "path": "apps/api", "mediaType": "application/vnd.code", "required": true }
+      ],
+      "position": { "x": 600, "y": 400 }
+    },
+    {
+      "id": "web-review",
+      "name": "独立评审（前端）",
+      "type": "agent",
+      "agentId": "zeekr-fullstack-review-web",
+      "maxAttempts": 2,
+      "maxReworks": 0,
+      "rejectTo": "web-implement",
+      "artifactOutputs": [
+        { "name": "webReview", "path": "review-web.md", "mediaType": "text/markdown", "required": true }
+      ],
+      "position": { "x": 860, "y": 120 }
+    },
+    {
+      "id": "api-review",
+      "name": "独立评审（后端）",
+      "type": "agent",
+      "agentId": "zeekr-fullstack-review-api",
+      "maxAttempts": 2,
+      "maxReworks": 0,
+      "rejectTo": "api-implement",
+      "artifactOutputs": [
+        { "name": "apiReview", "path": "review-api.md", "mediaType": "text/markdown", "required": true }
+      ],
+      "position": { "x": 860, "y": 400 }
+    },
+    {
+      "id": "hard-gate",
+      "name": "硬门禁",
+      "type": "script",
+      "scriptLanguage": "shell",
+      "script": "set -euo pipefail\nbash scripts/hard-gate.sh\n",
+      "maxAttempts": 1,
+      "maxReworks": 0,
+      "rejectTo": "web-implement",
+      "position": { "x": 1120, "y": 260 }
+    },
+    {
+      "id": "sign-off",
+      "name": "人工签收",
+      "type": "approval",
+      "maxAttempts": 1,
+      "maxReworks": 0,
+      "rejectTo": "design",
+      "position": { "x": 1380, "y": 260 }
+    },
+    {
+      "id": "deliver",
+      "name": "交付汇总（开 PR）",
+      "type": "agent",
+      "agentId": "zeekr-fullstack-deliver",
+      "maxAttempts": 2,
+      "maxReworks": 0,
+      "artifactOutputs": [
+        { "name": "delivery", "path": "delivery.md", "mediaType": "text/markdown", "required": true }
+      ],
+      "position": { "x": 1640, "y": 260 }
+    }
+  ],
+  "edges": [
+    { "id": "e-clarify-design", "source": "clarify", "target": "design", "when": "success" },
+    { "id": "e-design-web", "source": "design", "target": "web-implement", "when": "success" },
+    { "id": "e-design-api", "source": "design", "target": "api-implement", "when": "success" },
+    { "id": "e-web-review", "source": "web-implement", "target": "web-review", "when": "success" },
+    { "id": "e-api-review", "source": "api-implement", "target": "api-review", "when": "success" },
+    { "id": "e-webreview-gate", "source": "web-review", "target": "hard-gate", "when": "success" },
+    { "id": "e-apireview-gate", "source": "api-review", "target": "hard-gate", "when": "success" },
+    { "id": "e-gate-signoff", "source": "hard-gate", "target": "sign-off", "when": "success" },
+    { "id": "e-signoff-deliver", "source": "sign-off", "target": "deliver", "when": "success" }
+  ]
+}
