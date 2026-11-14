@@ -22,6 +22,12 @@ npm run lint / typecheck / build / test / test:contract
 bash scripts/hard-gate.sh
 ```
 
+## 成本影响（平台 0.3.8 无预算阈值开关，靠纪律约束）
+
+- [ ] 单条需求已拆成多次 run，未用一个长 run 包办设计 + 实现 + 评审
+- [ ] PRD / 契约经人工定稿后才进入实现
+- [ ] 已选用满足要求的较轻模型，未无谓提高思考强度
+
 ## 合规检查
 
 - [ ] 无官方标识、官方图、官方文案原文
