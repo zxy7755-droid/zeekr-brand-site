@@ -1,0 +1,38 @@
+name: 新需求
+description: 提交一个页面或功能需求，进入需求确认与设计契约阶段
+title: "[REQ] "
+labels: ["requirement"]
+body:
+  - type: textarea
+    id: background
+    attributes:
+      label: 背景与目标
+      description: 说明访客/业务场景，以及要达成的结果
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: 范围与验收要点
+      description: 逐条列出可验证的验收条件
+    validations:
+      required: true
+  - type: dropdown
+    id: contract
+    attributes:
+      label: 是否涉及契约变更
+      options:
+        - 复用已签收契约（无需重新签收）
+        - 变更 OpenAPI / 数据模型（需重新签收）
+    validations:
+      required: true
+  - type: textarea
+    id: compliance
+    attributes:
+      label: 合规确认
+      value: |
+        - 非官方技术演示口径
+        - 占位素材与示意数据
+        - 免责声明常驻
+    validations:
+      required: true

@@ -1,0 +1,34 @@
+name: 缺陷报告
+description: 页面、接口或部署环节的异常
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: 影响范围
+      options:
+        - 前端页面
+        - 后端接口
+        - CI / CD / 部署
+        - 数据库
+        - 其他
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤与实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望结果
+    validations:
+      required: true
+  - type: input
+    id: run
+    attributes:
+      label: 关联的 Actions run / PR / commit
+      placeholder: "例如 PR #8 / run 43619691229"
