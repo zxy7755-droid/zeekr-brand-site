@@ -51,6 +51,7 @@
 | P5 | 门店与预约试驾 | `/stores` | `GET /stores` + `POST /test-drive-leads` |
 | P6 | 品牌资讯 | `/news`、`/news/[slug]` | `GET /news`、`GET /news/{slug}` |
 | P7 | 关于与联系 | `/about` | 静态示意内容 + 免责声明 |
+| P8 | 车型对比（REQ-002） | `/compare` | `GET /vehicles` + 前端并排对比，详见 `requirement-compare.md` |
 
 所有页面共享：顶部导航、页脚免责声明、占位图占位框（`apps/web/public/placeholder/`）。
 
@@ -66,6 +67,7 @@
 | FR-6 | 健康检查 | `GET /health` 返回 `status / service / version / timestamp / db` |
 | FR-7 | 前端不接 mock 数据 | 统一走 `src/lib/contract.ts` 的 `apiUrl()`；无 fixture 回退分支 |
 | FR-8 | 交付留痕 | 8 份文档随 PR 入库：`requirement / design / review-backend / review-frontend / review-qa / decision / delivery / changelog` |
+| FR-9 | 车型对比页（REQ-002） | 见 `docs/delivery/requirement-compare.md`；复用已签收契约，不改 OpenAPI / 数据模型 / 部署契约 |
 
 ## 5. 数据对象
 
