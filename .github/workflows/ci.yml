@@ -58,21 +58,22 @@ jobs:
     name: api (lint / typecheck / test / contract)
     runs-on: ubuntu-latest
     services:
-      postgres:
-        image: postgres:16-alpine
+      mysql:
+        image: mysql:8.0
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: zeekr
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: zeekr
+          MYSQL_USER: zeekr
+          MYSQL_PASSWORD: zeekr
         ports:
-          - 5432:5432
+          - 3306:3306
         options: >-
-          --health-cmd "pg_isready -U postgres -d zeekr"
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -uroot -proot"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/zeekr
+      DATABASE_URL: mysql://zeekr:zeekr@127.0.0.1:3306/zeekr
       API_BASE_URL: http://localhost:3001
       PORT: '3001'
     steps:
