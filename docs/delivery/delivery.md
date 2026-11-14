@@ -54,10 +54,13 @@
 - [x] 本地 lint / typecheck / build / test / test:contract 均通过
 - [x] `hard-gate.sh` 真实 `exit 0`
 - [x] 文档、接口、数据模型契约未被改动（已用 `git status` 复核）
-- [ ] GitHub Actions 三 job 全绿（待 PR 推送后确认）
+- [ ] GitHub Actions 三 job 全绿（待确认）
 - [ ] staging `/compare` 可访问且 `/health` 返回 `db: ok`（待 CD 后确认）
 - [ ] 宗雪源人工签收（**未签收前不晋升生产环境**）
 
 ## 5. PR
 
-> PR 链接将在本文提交后通过平台 GitHub 授权推送 `feature/compare` 并发起，创建后补充在本节。
+- PR 链接：https://github.com/zxy7755-droid/zeekr-brand-site/pull/6
+- 源分支 → 目标分支：`feature/compare` → `main`
+- 关联提交：`64f750a853086dcbcd2a96091913d82c5312b42d`（代码与测试）+ 本文档更新提交
+- PR 描述仅包含客观改动与本地验证结果，不代为对 GitHub Actions CI 下结论；CI 三 job 状态请在 PR 页面查看后再推进签收流程。
