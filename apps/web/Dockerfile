@@ -7,6 +7,10 @@ RUN npm ci --no-audit --no-fund
 FROM node:22-alpine AS build
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
+# next.config.mjs inlines API_BASE_URL into the client bundle at build time.
+# Use the relative /api prefix: Nginx terminates TLS and proxies to the api slot.
+ARG API_BASE_URL=/api
+ENV API_BASE_URL=$API_BASE_URL
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
