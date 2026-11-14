@@ -1,0 +1,46 @@
+name: Monitor (staging)
+
+# External probe of the deployed staging slot. Failures surface as a red
+# workflow run and a GitHub notification; no cloud monitoring agent needed.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: monitor-staging
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe endpoints
+        run: |
+          set -euo pipefail
+          BASE=https://stage.zeekr.www.xueyuanzong.top
+          for path in / /compare /api/health /api/vehicles; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$BASE$path" || true)
+            echo "$path -> $code"
+            if [ "$code" != "200" ]; then
+              echo "::error::$path returned $code"
+              exit 1
+            fi
+          done
+
+          health=$(curl -s --max-time 15 "$BASE/api/health")
+          echo "health: $health"
+          printf '%s' "$health" | grep -q '"db":"ok"' || {
+            echo "::error::database not reported as ok"; exit 1;
+          }
+
+          count=$(curl -s --max-time 15 "$BASE/api/vehicles" \
+            | python3 -c "import json,sys; print(len(json.load(sys.stdin)['items']))")
+          echo "published vehicles: $count"
+          if [ "$count" -lt 4 ]; then
+            echo "::error::expected at least 4 published vehicles, got $count"
+            exit 1
+          fi

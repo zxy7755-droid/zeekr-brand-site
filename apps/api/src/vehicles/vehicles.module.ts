@@ -7,5 +7,6 @@ import { VehiclesService } from './vehicles.service';
 @Module({
   controllers: [VehiclesController],
   providers: [VehiclesService, PrismaService],
+  exports: [PrismaService],
 })
 export class VehiclesModule {}
