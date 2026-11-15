@@ -1,7 +1,7 @@
 # 全量迁移到 CNB（去掉 GitHub）
 
 > 目标：代码托管、CI/CD、镜像制品、保护分支、审批门、LoopForge 平台集成全部迁到 CNB，
-> GitHub 可归档。本文件是执行蓝图，不是已完成的迁移记录。
+> GitHub 可归档。本文件是执行蓝图 + 进展记录（第 8 节）；已完成的步骤不代表全量迁移结束。
 
 ## 0. 边界与现状
 
@@ -120,8 +120,16 @@
 | 私有仓库 `tencentmobilityeast/penguin-motors-site` | 已创建 |
 | 访问令牌 `penguin-motors-migration` | 已创建：**指定组织**范围、Git 客户端凭据 + 制品库场景、永久有效；明文仅存部署机 600 权限文件，未写入仓库或日志 |
 | Docker 制品库 | 开箱即用，地址 `docker.cnb.cool/tencentmobilityeast/penguin-motors-site/<镜像名>`，登录用户 `cnb` |
-| 代码全量镜像 | 待推送（`git push --mirror`，21 个 refs） |
-| 部署机 `/etc/zeekr/registry.env` | 待下发（切流前保持 GHCR 默认） |
-| LoopForge 平台 `cnb` provider | 未改造（第 4 节），需维护窗口 |
+| 代码全量镜像 | **已完成**：`git push --mirror` 推送 22 个 refs（21 分支 + HEAD），`main = 354bdb3` |
+| CNB 流水线 | **已自动触发并通过**：`push` 事件构建 `cnb-knh-1k7fjs1ja`，2/2 成功，2m36s |
+| Docker 制品 | **已生成**：`zeekr-brand-site-web` / `zeekr-brand-site-api`，tag 为完整 commit sha |
+| 部署机 `/etc/zeekr/registry.env` | **已下发并切流**：`root:deploy 640`，含 `IMAGE_PREFIX` + `CNB_REGISTRY_TOKEN`；deploy 用户 `docker login` 成功并可拉取两个镜像 |
+| 运行层 | **已切换**：staging / prod 四容器全部运行 `docker.cnb.cool/...:354bdb3`；两个域名 `/`、`/compare`、`/api/health`、`/api/vehicles`、`/brand/hero.jpg` 全 200，`db: ok` |
+| LoopForge 平台 `cnb` provider | **未改造**（第 4 节）：需重建平台镜像停机，且会失去官方升级路径，待维护窗口确认 |
+| GitHub Actions | 仍在运行（双写状态）；归档前需先关闭 |
+
+> 令牌权限备注：当前 `penguin-motors-migration` 勾的是「Git 客户端凭据 + 制品库」，实测 OPENAPI 查构建历史 / 触发状态会返回 `10023 Missing required scopes: repo-cnb-history:r / repo-cnb-trigger:r`。平台 provider 改造前需另发一枚带 `repo-pr`、`repo-issue`、`repo-cnb-trigger` 等 scope 的专用令牌。
+
+> 回退方式：删除 `/etc/zeekr/registry.env` 中的 `IMAGE_PREFIX` 一行，下次部署即回到 GHCR 镜像；`.env.previous` 亦保留上一版前缀。
 
 > 安全提示：当前令牌为组织级、永久有效。切流完成后应换成「指定仓库 + 90 天」令牌并轮换，同时撤销本枚。
