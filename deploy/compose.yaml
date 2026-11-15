@@ -4,7 +4,7 @@ name: zeekr-stage
 # after the human sign-off gate (see docs/delivery/design.md section 7).
 services:
   api:
-    image: ghcr.io/zxy7755-droid/penguin-motors-api:${IMAGE_TAG}
+    image: ghcr.io/zxy7755-droid/zeekr-brand-site-api:${IMAGE_TAG}
     restart: unless-stopped
     ports:
       - "127.0.0.1:3001:3001"
