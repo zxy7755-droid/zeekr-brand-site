@@ -133,7 +133,7 @@ export default function ComparePage() {
     <main style={{ fontFamily: 'system-ui, sans-serif', padding: 32 }}>
       <h1>企鹅汽车 · 车型对比</h1>
       <p style={{ fontSize: 13, opacity: 0.75 }}>
-        勾选 2–3 款车型，并排查看核心参数；以下参数均为工程参数，真实数据。
+        勾选 2–3 款车型，并排查看核心参数；参数以官网公示口径为准。
       </p>
 
       {error && (
