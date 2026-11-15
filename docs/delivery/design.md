@@ -116,7 +116,11 @@
 `requirement.md`、`design.md`、`review-backend.md`、`review-frontend.md`、
 `review-qa.md`、`decision.md`、`delivery.md`、`changelog.md`。
 
-- **唯一人工签收人：宗雪源**；签收动作发生在 SOP 的「人工验收门」，位于放行前最后一步
-- 签收前不得进入「前端实现 / 后端实现」节点；实现完成后不得再修改已签收的契约，变更须重新签收
+- **唯一人工签收人：宗雪源**；签收不再依赖本地签收单或对话确认，改为 **GitHub PR 的 CODEOWNER Approve**
+- 签收台账见 `docs/delivery/signoff.md`：列明待签收批次、基线 commit 与变更须重新签收的范围
+- GitHub 侧签收门：分支保护（1 审 + CODEOWNERS 必审 + 三 CI 必过 + 会话解决）；review 记录即签收证据
+- 生产晋升门：`promote.yml` 绑定 `production` Environment，需同一签收人在 Actions 审批部署后才执行
+- 平台侧：LoopForge 的需求 issue 管流程状态，SOP 设计节点以签收台账的签收状态为准入条件；平台不生产 PRD
+- 签收前不得进入「前端实现 / 后端实现」节点；实现完成后不得再修改已签收的契约，变更须开新签收 PR
 - 准入：`scripts/hard-gate.sh` 真实 `exit 0` + GitHub Actions 三 job 全绿 + 契约测试通过
 - 品牌口径：正式授权品牌官网 + 品牌视觉素材 + 车型数据 + 全站版权信息，详见 `requirement.md` 第 0 节
