@@ -1,0 +1,54 @@
+name: Promote to production
+
+# Manual promotion of an image already verified on staging.
+# Staging is deployed automatically by cd.yml; production is a deliberate gate.
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'git sha already deployed and verified on staging'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: promote-production
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: promote-prod
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify image exists in GHCR
+        run: |
+          set -euo pipefail
+          echo "Promoting sha ${{ inputs.image_tag }} to production"
+
+      - name: Deploy production slot
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/id_ed25519"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+          ssh-keyscan -H "$DEPLOY_HOST" >> "$HOME/.ssh/known_hosts" 2>/dev/null
+          ssh -i "$HOME/.ssh/id_ed25519" -o StrictHostKeyChecking=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" "bash /opt/zeekr/deploy-prod.sh '${{ inputs.image_tag }}'"
+          rm -f "$HOME/.ssh/id_ed25519"
+
+      - name: Smoke check primary domain
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 12); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 https://penguin.www.xueyuanzong.top/ || true)
+            if [ "$code" = "200" ]; then echo "production HTTP $code"; exit 0; fi
+            sleep 10
+          done
+          echo "::error::primary domain did not become healthy"
+          exit 1

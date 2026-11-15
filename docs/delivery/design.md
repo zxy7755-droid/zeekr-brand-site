@@ -103,8 +103,11 @@
 - Nginx 终止 TLS；`/api/` 前缀转发到对应 api 端口并去掉前缀；`/.well-known/acme-challenge/` 保留供证书续期
 - 证书：Let's Encrypt ECC（acme.sh HTTP-01），`/etc/nginx/ssl/zeekr.{crt,key}`，自动续期 reload
 - GitHub Actions Secrets：`DEPLOY_SSH_KEY` / `DEPLOY_HOST` / `DEPLOY_USER`；GHCR 用内置 `GITHUB_TOKEN`（`permissions: packages: write`）
-- 部署脚本必须幂等：备份上一版本 → 拉取镜像 → 启动 → `/health` 探测 → 失败自动回滚到上一版本
+- **双槽位已实际拆分**：`deploy/compose.yaml`（`zeekr-stage`，3000/3001）与 `deploy/compose.prod.yaml`（`zeekr-prod`，3002/3003）是两个独立 compose project，各自读取 `DATABASE_URL_STAGE` / `DATABASE_URL_PROD`
+- `cd.yml` 在 main 推送后构建镜像并**自动部署 staging**；`promote.yml` 为 `workflow_dispatch` 手动晋升，输入已在 staging 验证过的 `<git-sha>`，部署 prod 槽位
+- 部署脚本必须幂等：备份上一版本 → 拉取镜像 → 启动 → `/health` 探测 → 失败自动回滚到上一版本；两套环境各有独立的 `.env.runtime*` / `.env.previous*` 与日志
 - 回滚件与发布版本号随交付文档记录，禁止无版本号覆盖
+- `monitor.yml` 每 15 分钟同时探活主域名与预发域名（页面、`db: ok`、车型数量）
 
 ## 8. 交付与签收
 
