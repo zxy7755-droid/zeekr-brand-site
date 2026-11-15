@@ -1,0 +1,34 @@
+# CNB 部署环境与审批门（等价 GitHub Environments）
+# 用户名 xueyuanzong 需替换为 CNB 实际账号；语法依据 docs.cnb.cool/zh/build/deploy.html
+environments:
+  - name: contract-signoff
+    description: 契约签收（唯一签收人审批后放行）
+    env:
+      name: contract-signoff
+    permissions:
+      users:
+        - xueyuanzong
+    require:
+      - approver:
+          users:
+            - xueyuanzong
+        title: 契约签收确认
+
+  - name: staging
+    description: 预发环境（自动部署，无需审批）
+    env:
+      name: staging
+
+  - name: production
+    description: 生产环境（需 staging 已部署 + 签收人审批）
+    env:
+      name: production
+    permissions:
+      users:
+        - xueyuanzong
+    require:
+      - environmentName: staging
+      - approver:
+          users:
+            - xueyuanzong
+        title: 生产晋升审批
