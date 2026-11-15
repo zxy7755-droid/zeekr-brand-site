@@ -100,6 +100,7 @@
 | 镜像 | GHCR `:<git-sha>`，同一镜像晋升 | 同左 |
 
 - 两台云主机同 VPC：执行机负责构建与测试，部署机只跑运行态；两机均不开放数据库公网访问
+- 部署机 2026-11-15 已由 2核4G 升配为 **4核8G**（SA9.MEDIUM4 → SA9.LARGE8），用于同时承载四个 Node 容器；升配需强制关机，容器依赖 `restart: unless-stopped` 自动恢复，已实测开机后 4 容器全部健康
 - Nginx 终止 TLS；`/api/` 前缀转发到对应 api 端口并去掉前缀；`/.well-known/acme-challenge/` 保留供证书续期
 - 证书：Let's Encrypt ECC（acme.sh HTTP-01），`/etc/nginx/ssl/zeekr.{crt,key}`，自动续期 reload
 - GitHub Actions Secrets：`DEPLOY_SSH_KEY` / `DEPLOY_HOST` / `DEPLOY_USER`；GHCR 用内置 `GITHUB_TOKEN`（`permissions: packages: write`）
