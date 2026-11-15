@@ -1,7 +1,7 @@
 name: zeekr-stage
 
-# Staging slot only. Production uses the same file with different ports/tag
-# after the human sign-off gate (see docs/delivery/design.md section 7).
+# Staging slot (3000/3001, zeekr_stage). Production is a separate project in
+# compose.prod.yaml (3002/3003, zeekr_prod); see docs/delivery/design.md section 7.
 services:
   api:
     image: ghcr.io/zxy7755-droid/zeekr-brand-site-api:${IMAGE_TAG}

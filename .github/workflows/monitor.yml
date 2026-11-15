@@ -1,7 +1,7 @@
-name: Monitor (staging)
+name: Monitor (production + staging)
 
-# External probe of the deployed staging slot. Failures surface as a red
-# workflow run and a GitHub notification; no cloud monitoring agent needed.
+# External probe of both deployed slots. Failures surface as a red workflow
+# run and a GitHub notification; no cloud monitoring agent needed.
 on:
   schedule:
     - cron: '*/15 * * * *'
@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: monitor-staging
+  group: monitor-slots
   cancel-in-progress: true
 
 jobs:
@@ -21,26 +21,28 @@ jobs:
       - name: Probe endpoints
         run: |
           set -euo pipefail
-          BASE=https://stage.penguin.www.xueyuanzong.top
-          for path in / /compare /api/health /api/vehicles; do
-            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$BASE$path" || true)
-            echo "$path -> $code"
-            if [ "$code" != "200" ]; then
-              echo "::error::$path returned $code"
+          for BASE in https://penguin.www.xueyuanzong.top https://stage.penguin.www.xueyuanzong.top; do
+            echo "--- probing $BASE ---"
+            for path in / /compare /api/health /api/vehicles; do
+              code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$BASE$path" || true)
+              echo "$path -> $code"
+              if [ "$code" != "200" ]; then
+                echo "::error::$BASE$path returned $code"
+                exit 1
+              fi
+            done
+
+            health=$(curl -s --max-time 15 "$BASE/api/health")
+            echo "health: $health"
+            printf '%s' "$health" | grep -q '"db":"ok"' || {
+              echo "::error::$BASE database not reported as ok"; exit 1;
+            }
+
+            count=$(curl -s --max-time 15 "$BASE/api/vehicles" \
+              | python3 -c "import json,sys; print(len(json.load(sys.stdin)['items']))")
+            echo "published vehicles: $count"
+            if [ "$count" -lt 4 ]; then
+              echo "::error::$BASE expected at least 4 published vehicles, got $count"
               exit 1
             fi
           done
-
-          health=$(curl -s --max-time 15 "$BASE/api/health")
-          echo "health: $health"
-          printf '%s' "$health" | grep -q '"db":"ok"' || {
-            echo "::error::database not reported as ok"; exit 1;
-          }
-
-          count=$(curl -s --max-time 15 "$BASE/api/vehicles" \
-            | python3 -c "import json,sys; print(len(json.load(sys.stdin)['items']))")
-          echo "published vehicles: $count"
-          if [ "$count" -lt 4 ]; then
-            echo "::error::expected at least 4 published vehicles, got $count"
-            exit 1
-          fi

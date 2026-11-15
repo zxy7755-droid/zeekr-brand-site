@@ -9,6 +9,14 @@
 - 车型 / 门店 / 资讯数据全面更新；对外域名切换至 `penguin.www` / `stage.penguin.www`
 - 合规口径由「非官方技术演示」改为「正式授权品牌官网」，页脚改为版权信息
 
+## [DUAL-SLOT] - 2026-11-15
+- 主域名与预发拆为两套独立环境：`deploy/compose.prod.yaml`（`zeekr-prod`，3002/3003，`zeekr_prod` 库）与现有 staging 完全隔离
+- 新增 `deploy/deploy-prod.sh`（幂等 + 健康检查 + 失败回滚，独立 runtime env 与日志）
+- 新增 `promote.yml`：`workflow_dispatch` 手动晋升已在 staging 验证的 `<git-sha>`，不再由 push 自动进生产
+- Nginx 主域名反代回 prod 槽位 3002/3003；预发保持 3000/3001
+- `monitor.yml` 改为双域名每 15 分钟探活
+- prod 库执行同一份迁移与企鹅汽车 seed；部署机升配至 4核8G 承载四容器
+
 ## [Unreleased]
 
 ### 治理
