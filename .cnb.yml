@@ -8,7 +8,7 @@
 # 切换前置（详见 docs/delivery/cnb-migration.md）：
 #   1. 凭据就绪前，在 CNB「设置 → 云原生构建」关闭自动触发
 #   2. 密钥仓库注入 DEPLOY_SSH_KEY / DEPLOY_HOST / DEPLOY_USER
-#   3. 开通 Docker 制品库，把 IMAGE_REGISTRY 改成制品库页面给出的实际地址
+#   3. 制品库开箱即用；登录 docker login -u cnb docker.cnb.cool，镜像路径已按本仓库配好
 #   4. 部署机 docker login docker.cnb.cool，并下发 IMAGE_PREFIX
 #   5. 全部就绪后把 CNB_DEPLOY_ENABLED 设为 true，再打开自动触发
 #
@@ -21,7 +21,9 @@ env:
   NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
   NEXT_TELEMETRY_DISABLED: "1"
   API_BASE_URL: http://localhost:3001
-  IMAGE_REGISTRY: docker.cnb.cool/${CNB_REPO_SLUG_LOWERCASE}/-/docker
+  # CNB 制品库内置变量：CNB_DOCKER_REGISTRY=docker.cnb.cool，
+  # CNB_REPO_SLUG_LOWERCASE=<组织>/<仓库>；镜像名与 deploy/compose*.yaml 的 IMAGE_PREFIX 对齐
+  IMAGE_REGISTRY: docker.cnb.cool/tencentmobilityeast/penguin-motors-site
 
 main:
   pull_request:
@@ -78,10 +80,11 @@ main:
           script: |
             set -eu
             echo "$CNB_TOKEN" | docker login docker.cnb.cool --username cnb --password-stdin
-            docker build -f apps/web/Dockerfile -t "$IMAGE_REGISTRY/web:$CNB_COMMIT" apps/web
-            docker build -f apps/api/Dockerfile -t "$IMAGE_REGISTRY/api:$CNB_COMMIT" apps/api
-            docker push "$IMAGE_REGISTRY/web:$CNB_COMMIT"
-            docker push "$IMAGE_REGISTRY/api:$CNB_COMMIT"
+            PREFIX="$CNB_DOCKER_REGISTRY/$CNB_REPO_SLUG_LOWERCASE/zeekr-brand-site"
+            docker build -f apps/web/Dockerfile -t "$PREFIX-web:$CNB_COMMIT" apps/web
+            docker build -f apps/api/Dockerfile -t "$PREFIX-api:$CNB_COMMIT" apps/api
+            docker push "$PREFIX-web:$CNB_COMMIT"
+            docker push "$PREFIX-api:$CNB_COMMIT"
 
     - name: deploy-staging
       runner: { cpus: 2 }

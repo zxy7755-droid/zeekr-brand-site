@@ -26,7 +26,7 @@
 
 1. **CNB 根组织 + 仓库**：导入 GitHub 仓库（含分支、标签、提交历史）
 2. **访问令牌**：个人设置 → 访问令牌，最小权限建议 `repo-basic-info:r`、`repo-code:rw`、`pull:rw`、`issue:rw`、`pipeline:rw`、`artifact:rw`；分别给「平台集成」和「部署机拉镜像」各发一枚
-3. **开通 Docker 制品库**：仓库「设置 → 制品库」创建 Docker 类型，把 `.cnb.yml` 里 `IMAGE_REGISTRY` 改成制品库页面给出的实际地址（当前是按 CNB 制品库路径规则推断的占位值）
+3. **制品库开箱即用**（仓库「制品」页直接给出指引，无需开通）：登录 `docker login -u cnb docker.cnb.cool`，密码为访问令牌；镜像路径为 `docker.cnb.cool/<组织>/<仓库>/<镜像名>`，`.cnb.yml` 已按 `tencentmobilityeast/penguin-motors-site` 配好
 4. **密钥仓库**：`DEPLOY_SSH_KEY` / `DEPLOY_HOST` / `DEPLOY_USER` / `CNB_REGISTRY_TOKEN` / `CNB_REGISTRY_USER`，用 `imports` 注入 `.cnb.yml`
 5. **部署机**：下发 `/etc/zeekr/registry.env`（600 权限），内容 `IMAGE_PREFIX=<制品库前缀>/zeekr-brand-site`、`CNB_REGISTRY_TOKEN=...`、`CNB_REGISTRY_USER=...`
 6. **平台维护窗口**：重建 LoopForge 镜像并重启，预计 3–5 分钟平台不可用
@@ -58,7 +58,7 @@
 2. 部署审批：`.cnb/tag_deploy.yml` 已声明 `require.approver`，在页面确认审批人为实际 CNB 账号
 3. 定时任务：`"crontab: */15 * * * *"` 挂在 `main` 分支，最小间隔 5 分钟，时区 Asia/Shanghai
 4. 切换前保持「设置 → 云原生构建 → 允许自动触发」关闭；`.cnb.yml` 的部署步骤另有 `CNB_DEPLOY_ENABLED != true` 跳过保护
-5. 首跑校验项：CNB `services` 起 MySQL 的写法、`docker.cnb.cool` 登录用户名、制品库实际路径、`imports` 密钥路径
+5. 首跑校验项：CNB `services` 起 MySQL 的写法、`imports` 密钥路径、CI 三 job 是否通过
 
 ## 4. LoopForge 平台 provider 改造（B 方案的核心）
 
@@ -106,7 +106,22 @@
 ## 7. 已知风险
 
 - 平台源码补丁失去官方平滑升级路径（最大长期成本）
-- CNB 制品库地址、登录用户名、`services` MySQL 写法需首跑校验
+- CNB 制品库地址与登录方式已按官方指引确认；`services` MySQL 写法仍需首跑校验
 - 定时任务 `CNB_TOKEN` 默认仅限当前仓库，跨仓同步要开组织级开关
 - 双平台过渡期 PR / 签收记录会分裂，需在 `signoff.md` 注明两处证据
 - 平台重建有 3–5 分钟停机，且当前 ZBS-3 的 SOP 尚未跑满，建议先完成或中止再动平台
+
+
+## 8. 进展记录（2026-11-15 20:30）
+
+| 项 | 状态 |
+| --- | --- |
+| CNB 组织 `tencentmobilityeast` | 已登录，原有 5 个仓库与 `*-secrets` 密钥仓库惯例 |
+| 私有仓库 `tencentmobilityeast/penguin-motors-site` | 已创建 |
+| 访问令牌 `penguin-motors-migration` | 已创建：**指定组织**范围、Git 客户端凭据 + 制品库场景、永久有效；明文仅存部署机 600 权限文件，未写入仓库或日志 |
+| Docker 制品库 | 开箱即用，地址 `docker.cnb.cool/tencentmobilityeast/penguin-motors-site/<镜像名>`，登录用户 `cnb` |
+| 代码全量镜像 | 待推送（`git push --mirror`，21 个 refs） |
+| 部署机 `/etc/zeekr/registry.env` | 待下发（切流前保持 GHCR 默认） |
+| LoopForge 平台 `cnb` provider | 未改造（第 4 节），需维护窗口 |
+
+> 安全提示：当前令牌为组织级、永久有效。切流完成后应换成「指定仓库 + 90 天」令牌并轮换，同时撤销本枚。
