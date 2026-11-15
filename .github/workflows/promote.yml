@@ -21,6 +21,9 @@ jobs:
   promote:
     name: promote-prod
     runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://penguin.www.xueyuanzong.top
     steps:
       - name: Verify image exists in GHCR
         run: |

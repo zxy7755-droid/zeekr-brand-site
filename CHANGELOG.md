@@ -17,6 +17,12 @@
 - `monitor.yml` 改为双域名每 15 分钟探活
 - prod 库执行同一份迁移与企鹅汽车 seed；部署机升配至 4核8G 承载四容器
 
+## [SIGNOFF] - 2026-11-15
+- 新增 `docs/delivery/signoff.md`：P1 契约 / REQ-002 / 品牌切换 / 双环境拆分的签收台账与规则
+- 签收动作改为 **GitHub PR 的 CODEOWNER Approve**（review 记录即证据），不再用本地签收单或对话确认
+- `promote.yml` 绑定 `production` Environment，生产晋升需人工审批；分支保护 + CODEOWNERS 作为签收门
+- `design.md` 第 8 节明确 GitHub 管事实源与签收、平台管流程状态的分工
+
 ## [Unreleased]
 
 ### 治理
