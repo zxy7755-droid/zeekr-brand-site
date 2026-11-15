@@ -1,5 +1,5 @@
 name: 内容 / 素材变更
-description: 占位素材、示意数据或文案调整（须先过合规检查）
+description: 品牌视觉素材、车型数据或文案调整（须先过合规检查）
 title: "[CONTENT] "
 labels: ["content", "compliance-review"]
 body:
@@ -16,9 +16,9 @@ body:
       options:
         - label: 不含官方标识、官方车型图、官方文案原文
           required: true
-        - label: 已标注为示意数据 / 占位素材
+        - label: 已标注为车型数据 / 品牌视觉素材
           required: true
-        - label: 全站免责声明未被移除
+        - label: 全站版权信息未被移除
           required: true
         - label: 如涉及个人信息，已确认最小化与留存策略
           required: false

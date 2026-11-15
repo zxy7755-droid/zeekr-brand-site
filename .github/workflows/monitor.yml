@@ -21,7 +21,7 @@ jobs:
       - name: Probe endpoints
         run: |
           set -euo pipefail
-          BASE=https://stage.zeekr.www.xueyuanzong.top
+          BASE=https://stage.penguin.www.xueyuanzong.top
           for path in / /compare /api/health /api/vehicles; do
             code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$BASE$path" || true)
             echo "$path -> $code"

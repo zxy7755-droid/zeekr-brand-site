@@ -10,8 +10,8 @@
 
 ## 1. 背景与目标
 
-访客在浏览示意车型时，需要把多款车的核心参数放在一起横向比较；当前站点没有这个能力，只能逐个进出详情页。
-本期新增一个**车型对比页**，让访客一次勾选 2–3 款示意车型并排查看参数。
+访客在浏览车型时，需要把多款车的核心参数放在一起横向比较；当前站点没有这个能力，只能逐个进出详情页。
+本期新增一个**车型对比页**，让访客一次勾选 2–3 款车型并排查看参数。
 
 目标：
 1. 新增页面 `/compare`，成为 PRD 信息架构中的第 8 个页面
@@ -34,13 +34,13 @@
 
 | 编号 | 需求 | 验收要点 |
 | --- | --- | --- |
-| FR-9.1 | 页面 `/compare` 展示可勾选的示意车型列表 | 数据来自 `GET /vehicles`，统一走 `src/lib/contract.ts` 的 `apiUrl()`；无 fixture 回退分支 |
+| FR-9.1 | 页面 `/compare` 展示可勾选的车型列表 | 数据来自 `GET /vehicles`，统一走 `src/lib/contract.ts` 的 `apiUrl()`；无 fixture 回退分支 |
 | FR-9.2 | 勾选 2–3 款后并排对比 | 少于 2 款或超过 3 款给出明确提示，不生成对比表；参数行对齐 |
 | FR-9.3 | 对比维度 | 价格区间、续航、电池容量、加速、座位、驱动形式，共 6 行；字段缺失显示「—」而非报错 |
 | FR-9.4 | 空态 / 加载态 / 错误态 | 三种状态都有可见文案；接口失败不白屏 |
 | FR-9.5 | 后端 `GET /vehicles`、`GET /vehicles/{slug}` | 按 OpenAPI 返回 `VehicleList` / `VehicleDetail`，只返回 `status=PUBLISHED`；分页参数生效 |
-| FR-9.6 | 示意数据 | 至少 4 条已发布车型、3 条门店、3 条已发布资讯，全部为示意值，图片键指向 `placeholder/` |
-| FR-9.7 | 合规 | 页面底部常驻免责声明；不出现官方标识、官方图、官方文案；示意参数标明「示意值」 |
+| FR-9.6 | 车型数据 | 至少 4 条已发布车型、3 条门店、3 条已发布资讯，均为官网展示内容，图片键指向 `/brand/` |
+| FR-9.7 | 合规 | 页面底部常驻版权信息；不出现官方标识、官方图、官方文案；参数标明「参数」 |
 | FR-9.8 | 响应式 | 移动端可横向滚动对比表，表头固定可读 |
 
 ## 4. 非目标
@@ -55,7 +55,7 @@
 - `scripts/hard-gate.sh` 真实 `exit 0`，日志进 `reports/hard-gate.log`
 - GitHub Actions 三 job 全绿（web / api / contract-check）
 - `GET /vehicles` 返回符合契约的分页结构；`/compare` 页面渲染出 ≥4 个可勾选项
-- staging 环境 `https://stage.zeekr.www.xueyuanzong.top/compare` 返回 200，`/health` 返回 `db: ok`
+- staging 环境 `https://stage.penguin.www.xueyuanzong.top/compare` 返回 200，`/health` 返回 `db: ok`
 - PR 含需求单、设计增量、评审记录、交付汇总；**唯一人工签收人 = 宗雪源**
 
 ## 6. 交付留痕清单
