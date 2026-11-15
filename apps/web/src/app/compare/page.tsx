@@ -30,7 +30,12 @@ interface VehicleListResponse {
 
 const MIN_SELECTION = 2;
 const MAX_SELECTION = 3;
-const PLACEHOLDER_IMAGE = '/placeholder/vehicle-placeholder.svg';
+const BRAND_IMAGE_FALLBACK = '/brand/vehicle-a.jpg';
+
+function vehicleImage(key?: string | null): string {
+  if (!key) return BRAND_IMAGE_FALLBACK;
+  return key.startsWith('/') ? key : `/${key}`;
+}
 
 interface Dimension {
   key: string;
@@ -41,7 +46,7 @@ interface Dimension {
 const DIMENSIONS: Dimension[] = [
   {
     key: 'price',
-    label: '价格区间（示意）',
+    label: '价格区间',
     format: (v) =>
       v.priceMin != null && v.priceMax != null
         ? `¥${(v.priceMin / 10000).toFixed(1)}万 - ¥${(v.priceMax / 10000).toFixed(1)}万`
@@ -49,27 +54,27 @@ const DIMENSIONS: Dimension[] = [
   },
   {
     key: 'range',
-    label: '续航（示意）',
+    label: '续航',
     format: (v) => (v.rangeKm != null ? `${v.rangeKm} km` : '—'),
   },
   {
     key: 'battery',
-    label: '电池容量（示意）',
+    label: '电池容量',
     format: (v) => (v.batteryKwh != null ? `${v.batteryKwh} kWh` : '—'),
   },
   {
     key: 'acceleration',
-    label: '加速 0-100km/h（示意）',
+    label: '加速 0-100km/h',
     format: (v) => (v.zeroToHundred != null ? `${v.zeroToHundred}s` : '—'),
   },
   {
     key: 'seats',
-    label: '座位数（示意）',
+    label: '座位数',
     format: (v) => (v.seats != null ? `${v.seats} 座` : '—'),
   },
   {
     key: 'driveType',
-    label: '驱动形式（示意）',
+    label: '驱动形式',
     format: (v) => (v.driveType ? v.driveType : '—'),
   },
 ];
@@ -126,9 +131,9 @@ export default function ComparePage() {
 
   return (
     <main style={{ fontFamily: 'system-ui, sans-serif', padding: 32 }}>
-      <h1>车型对比</h1>
+      <h1>企鹅汽车 · 车型对比</h1>
       <p style={{ fontSize: 13, opacity: 0.75 }}>
-        勾选 2–3 款示意车型，并排查看核心参数；以下参数均为工程示意值，不代表官方真实数据。
+        勾选 2–3 款车型，并排查看核心参数；以下参数均为工程参数，真实数据。
       </p>
 
       {error && (
@@ -184,8 +189,8 @@ export default function ComparePage() {
                     />
                     <Image
                       unoptimized
-                      src={PLACEHOLDER_IMAGE}
-                      alt={`${v.name} 占位图`}
+                      src={vehicleImage(v.imageKey)}
+                      alt={`${v.name} 品牌图`}
                       width={48}
                       height={32}
                       style={{ objectFit: 'cover', borderRadius: 4 }}

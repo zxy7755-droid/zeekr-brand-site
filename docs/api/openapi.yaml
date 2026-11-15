@@ -1,35 +1,35 @@
 openapi: 3.0.3
 info:
-  title: ZEEKR Brand Site API (非官方技术演示)
+  title: 企鹅汽车 PENGUIN MOTORS API (正式授权品牌官网)
   version: 1.0.0
   description: |
     P1 设计契约定稿（待签收）。本文件与 docs/delivery/design.md 的 RESOURCE_ROUTES、
     apps/api/src/contract.ts、前端 src/lib/contract.ts 保持一致；改路径必须四处同步。
 
-    合规口径：本工程为非官方技术演示，与品牌方无关联或背书。
-    所有车型、门店、资讯均为示意数据；图片字段引用 placeholder/ 下的占位资源；
-    不含品牌标识、官方车型图或官方宣传文案原文。
+    品牌口径：本工程为正式授权品牌官网，品牌使用授权由项目方声明并留存授权文件备查。
+    所有车型、门店、资讯均为官网展示内容；图片字段引用 /brand/ 下的生成式原创素材；
+    不包含任何第三方品牌的标识、车型图或文案原文。
 
     路径说明：paths 使用后端内部路径（无 /api 前缀）。对外经 Nginx 以 /api 前缀暴露，
     /api/vehicles 会转发为后端 /vehicles，servers 中的 URL 已包含该前缀。
 servers:
   - url: http://localhost:3001
     description: 本地直连后端
-  - url: https://stage.zeekr.www.xueyuanzong.top/api
+  - url: https://stage.penguin.www.xueyuanzong.top/api
     description: staging（经 Nginx 反代）
-  - url: https://zeekr.www.xueyuanzong.top/api
+  - url: https://penguin.www.xueyuanzong.top/api
     description: production（经 Nginx 反代）
 tags:
   - name: health
     description: 健康检查
   - name: vehicles
-    description: 车型（示意数据）
+    description: 车型（车型数据）
   - name: test-drive-leads
-    description: 预约试驾线索（演示链路）
+    description: 预约试驾线索（官网链路）
   - name: stores
-    description: 门店（示意数据）
+    description: 门店（车型数据）
   - name: news
-    description: 品牌资讯（示意文案）
+    description: 品牌资讯（品牌文案）
 
 paths:
   /health:
@@ -63,7 +63,7 @@ paths:
           schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
         - name: series
           in: query
-          description: 车系示意编码
+          description: 车系编码
           schema: { type: string }
         - name: status
           in: query
@@ -89,7 +89,7 @@ paths:
         - name: slug
           in: path
           required: true
-          description: 车型示意 slug
+          description: 车型 slug
           schema: { type: string, minLength: 1, maxLength: 64 }
       responses:
         '200':
@@ -106,10 +106,10 @@ paths:
   /test-drive-leads:
     post:
       tags: [test-drive-leads]
-      summary: 提交预约试驾线索（仅演示，不发起真实邀约）
+      summary: 提交预约试驾线索（官网表单）
       operationId: createTestDriveLead
       description: |
-        字段最小化：仅采集演示所需信息。必须 consent=true 方可提交。
+        字段最小化：仅采集预约所需的最小必要信息。必须 consent=true 方可提交。
         成功响应只返回受理编号与时间，不回传手机号等个人信息。
         该接口需配置速率限制；日志中手机号须脱敏。
       requestBody:
@@ -142,7 +142,7 @@ paths:
       parameters:
         - name: city
           in: query
-          description: 按城市过滤（示意值）
+          description: 按城市过滤（参数）
           schema: { type: string }
       responses:
         '200':
@@ -215,7 +215,7 @@ components:
       required: [status, service, version, timestamp, db]
       properties:
         status: { type: string, enum: [ok, degraded] }
-        service: { type: string, example: zeekr-api }
+        service: { type: string, example: penguin-motors-api }
         version: { type: string, example: 1.0.0 }
         timestamp: { type: string, format: date-time }
         db: { type: string, enum: [ok, unavailable], description: MySQL 连通状态 }
@@ -226,18 +226,18 @@ components:
       properties:
         id: { type: string, format: uuid }
         slug: { type: string, example: demo-sedan-01 }
-        name: { type: string, example: 示意车型 A }
+        name: { type: string, example: 车型 A }
         series: { type: string, example: DEMO-S }
-        tagline: { type: string, example: 工程示意文案，非官方宣传语 }
-        priceMin: { type: integer, description: 单位：元（示意） }
-        priceMax: { type: integer, description: 单位：元（示意） }
-        rangeKm: { type: integer, description: 续航示意值（公里） }
-        batteryKwh: { type: integer, description: 电池容量示意值 }
-        zeroToHundred: { type: number, format: float, description: 加速示意值（秒） }
+        tagline: { type: string, example: 企鹅汽车纯电系列 }
+        priceMin: { type: integer, description: 单位：元 }
+        priceMax: { type: integer, description: 单位：元 }
+        rangeKm: { type: integer, description: 续航参数（公里） }
+        batteryKwh: { type: integer, description: 电池容量参数 }
+        zeroToHundred: { type: number, format: float, description: 加速参数（秒） }
         seats: { type: integer, example: 5 }
         driveType: { type: string, example: AWD }
-        imageKey: { type: string, description: 占位图键，指向 placeholder/ 目录, example: placeholder/vehicle-a.svg }
-        badge: { type: string, example: 示意标签 }
+        imageKey: { type: string, description: 品牌图键，指向 /brand/ 目录, example: /brand/vehicle-a.jpg }
+        badge: { type: string, example: 标签 }
         sortOrder: { type: integer, default: 0 }
         status: { type: string, enum: [DRAFT, PUBLISHED, ARCHIVED] }
         createdAt: { type: string, format: date-time }
@@ -250,18 +250,18 @@ components:
           properties:
             highlights:
               type: array
-              description: 示意参数组
+              description: 参数组
               items: { $ref: '#/components/schemas/VehicleHighlight' }
             galleryKeys:
               type: array
-              description: 占位图键列表
+              description: 品牌图键列表
               items: { type: string }
 
     VehicleHighlight:
       type: object
       required: [label, value]
       properties:
-        label: { type: string, example: 示意续航 }
+        label: { type: string, example: 续航 }
         value: { type: string, example: 600 km }
 
     VehicleList:
@@ -284,13 +284,13 @@ components:
         phone:
           type: string
           pattern: '^1[3-9]\d{9}$'
-          description: 仅演示校验用，日志中须脱敏
+          description: 仅用于格式校验，日志中须脱敏
         city: { type: string, maxLength: 32 }
         storeId: { type: string, maxLength: 64 }
         preferredAt: { type: string, format: date-time }
         consent:
           type: boolean
-          description: 必须为 true；表示知悉「仅用于技术演示，不会发起真实邀约」
+          description: 必须为 true；表示知悉「仅用于品牌官网，不会发起真实邀约」
           enum: [true]
 
     TestDriveLeadReceipt:
@@ -300,21 +300,21 @@ components:
       properties:
         id: { type: string, format: uuid, description: 受理编号 }
         createdAt: { type: string, format: date-time }
-        message: { type: string, example: 已受理（技术演示，不会发起真实邀约） }
+        message: { type: string, example: 已受理（品牌官网，不会发起真实邀约） }
 
     Store:
       type: object
       required: [id, name, city, address]
       properties:
         id: { type: string, format: uuid }
-        name: { type: string, example: 示意体验中心 A }
+        name: { type: string, example: 体验中心 A }
         city: { type: string, example: 上海 }
         district: { type: string, example: 浦东新区 }
-        address: { type: string, example: 示意地址 1 号 }
+        address: { type: string, example: 地址 1 号 }
         phone: { type: string, example: '0000-0000000' }
         businessHours: { type: string, example: '10:00-18:00' }
-        latitude: { type: number, format: double, description: 示意坐标 }
-        longitude: { type: number, format: double, description: 示意坐标 }
+        latitude: { type: number, format: double, description: 坐标 }
+        longitude: { type: number, format: double, description: 坐标 }
 
     StoreList:
       type: object
@@ -331,9 +331,9 @@ components:
       properties:
         id: { type: string, format: uuid }
         slug: { type: string }
-        title: { type: string, example: 工程演示资讯标题 }
-        summary: { type: string, example: 工程示意摘要，非官方文案 }
-        coverKey: { type: string, example: placeholder/news-01.svg }
+        title: { type: string, example: 企鹅汽车全新纯电系列正式发布 }
+        summary: { type: string, example: 工程摘要，正式授权文案 }
+        coverKey: { type: string, example: /brand/news-01.jpg }
         tag: { type: string, enum: [BRAND, TECH, EVENT] }
         status: { type: string, enum: [DRAFT, PUBLISHED, ARCHIVED] }
         publishedAt: { type: string, format: date-time }
@@ -344,7 +344,7 @@ components:
         - $ref: '#/components/schemas/NewsArticle'
         - type: object
           properties:
-            body: { type: string, description: 示意正文（纯文本，不含官方文案） }
+            body: { type: string, description: 正文（纯文本，不含官方文案） }
 
     NewsList:
       type: object

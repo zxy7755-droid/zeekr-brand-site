@@ -71,7 +71,7 @@
 2. 不提交 `node_modules`、`dist`、`.next`、`.env*`、`reports/`
 3. CI 使用 Node 20 + 默认 npm registry；沙箱侧 `npmmirror` 仅为加速，不得写进仓库配置
 4. 硬门禁必须真实 `exit 0`，日志落入 `reports/hard-gate.log`
-5. 仓库内不得出现官方 Logo、车型图、官方文案原文；占位素材统一放 `apps/web/public/placeholder/`
+5. 仓库内不得出现第三方品牌标识、车型图或文案原文；品牌视觉素材统一放 `apps/web/public/brand/`
 
 ## 6. 数据契约（MySQL 8.0）
 
@@ -83,8 +83,8 @@
 | 数据表 | `Vehicle` / `TestDriveLead` / `Store` / `NewsArticle` 四张；主键 UUID，slug 唯一 |
 | 枚举 | `VehicleStatus` / `ContentStatus`（DRAFT/PUBLISHED/ARCHIVED）、`NewsTag`（BRAND/TECH/EVENT） |
 | 迁移 | `prisma migrate deploy` 在 CD 阶段执行；迁移文件随 PR 入库，禁止手工改线上表结构 |
-| 个人信息 | `TestDriveLead` 字段最小化；`consent=true` 才可写入；日志脱敏；演示数据保留 90 天后清理 |
-| 示意数据 | 全部为工程示意值，价格单位「元」；图片字段存 `placeholder/` 资源键，不存外链 |
+| 个人信息 | `TestDriveLead` 字段最小化；`consent=true` 才可写入；日志脱敏；采集数据保留 90 天后清理 |
+| 车型数据 | 价格与参数为官网展示口径，单位「元」；图片字段存 `/brand/` 资源键，不存外链 |
 
 `DATABASE_URL` 在 CI 由 MySQL 8.0 service 注入（`mysql://...:3306/...`），生产由部署机
 `/etc/zeekr/mysql.env`（600，deploy 属主）提供，**绝不写入仓库或 Actions 日志**。
@@ -93,7 +93,7 @@
 
 | 项 | staging | production |
 | --- | --- | --- |
-| 域名 | `stage.zeekr.www.xueyuanzong.top` | `zeekr.www.xueyuanzong.top` |
+| 域名 | `stage.penguin.www.xueyuanzong.top` | `penguin.www.xueyuanzong.top` |
 | web 端口 | `3000` | `3002` |
 | api 端口 | `3001` | `3003` |
 | 数据库 | `zeekr_stage` | `zeekr_prod` |
@@ -115,4 +115,4 @@
 - **唯一人工签收人：宗雪源**；签收动作发生在 SOP 的「人工验收门」，位于放行前最后一步
 - 签收前不得进入「前端实现 / 后端实现」节点；实现完成后不得再修改已签收的契约，变更须重新签收
 - 准入：`scripts/hard-gate.sh` 真实 `exit 0` + GitHub Actions 三 job 全绿 + 契约测试通过
-- 品牌口径：非官方技术演示 + 占位素材 + 示意数据 + 全站免责声明，详见 `requirement.md` 第 0 节
+- 品牌口径：正式授权品牌官网 + 品牌视觉素材 + 车型数据 + 全站版权信息，详见 `requirement.md` 第 0 节

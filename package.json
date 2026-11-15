@@ -2,7 +2,7 @@
   "name": "zeekr-brand-site",
   "version": "0.1.0",
   "private": true,
-  "description": "ZEEKR Brand Site - monorepo root (Next.js web + NestJS api)",
+  "description": "企鹅汽车 PENGUIN MOTORS - monorepo root (Next.js web + NestJS api)",
   "engines": {
     "node": ">=20"
   },

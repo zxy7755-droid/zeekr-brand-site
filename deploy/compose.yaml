@@ -4,14 +4,14 @@ name: zeekr-stage
 # after the human sign-off gate (see docs/delivery/design.md section 7).
 services:
   api:
-    image: ghcr.io/zxy7755-droid/zeekr-brand-site-api:${IMAGE_TAG}
+    image: ghcr.io/zxy7755-droid/penguin-motors-api:${IMAGE_TAG}
     restart: unless-stopped
     ports:
       - "127.0.0.1:3001:3001"
     environment:
       PORT: 3001
       DATABASE_URL: ${DATABASE_URL}
-      API_BASE_URL: https://stage.zeekr.www.xueyuanzong.top/api
+      API_BASE_URL: https://stage.penguin.www.xueyuanzong.top/api
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 10s
@@ -26,7 +26,7 @@ services:
       - "127.0.0.1:3000:3000"
     environment:
       PORT: 3000
-      API_BASE_URL: https://stage.zeekr.www.xueyuanzong.top/api
+      API_BASE_URL: https://stage.penguin.www.xueyuanzong.top/api
     depends_on:
       api:
         condition: service_healthy

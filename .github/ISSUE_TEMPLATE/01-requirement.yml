@@ -31,8 +31,8 @@ body:
     attributes:
       label: 合规确认
       value: |
-        - 非官方技术演示口径
-        - 占位素材与示意数据
-        - 免责声明常驻
+        - 正式授权品牌官网口径
+        - 品牌视觉素材与车型数据
+        - 版权信息常驻
     validations:
       required: true

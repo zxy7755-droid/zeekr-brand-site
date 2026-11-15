@@ -1,6 +1,6 @@
 // P1 数据模型定稿（设计契约，待签收）。
 // 数据库：腾讯云 MySQL 8.0 / utf8mb4；两环境分库 zeekr_stage / zeekr_prod。
-// 所有业务数据为示意值；不得写入官方素材、官方文案或真实用户个人信息。
+// 所有业务数据为参数；不得写入官方素材、官方文案或真实用户个人信息。
 
 generator client {
   provider = "prisma-client-js"
@@ -29,21 +29,21 @@ enum NewsTag {
   EVENT
 }
 
-/// 示意车型
+/// 车型
 model Vehicle {
   id             String        @id @default(uuid())
   slug           String        @unique
   name           String
   series         String
   tagline        String?       @db.VarChar(255)
-  priceMin       Int?          // 单位：元（示意）
-  priceMax       Int?          // 单位：元（示意）
-  rangeKm        Int?          // 续航示意值
+  priceMin       Int?          // 单位：元
+  priceMax       Int?          // 单位：元
+  rangeKm        Int?          // 续航参数
   batteryKwh     Int?
   zeroToHundred  Float?
   seats          Int?          @default(5)
   driveType      String?       @db.VarChar(32)
-  imageKey       String?       @db.VarChar(255) // 指向 placeholder/ 目录
+  imageKey       String?       @db.VarChar(255) // 指向 /brand/ 目录
   badge          String?       @db.VarChar(64)
   sortOrder      Int           @default(0)
   status         VehicleStatus @default(DRAFT)
@@ -54,7 +54,7 @@ model Vehicle {
   @@index([series])
 }
 
-/// 预约试驾线索（演示链路）；字段最小化，日志中手机号须脱敏
+/// 预约试驾线索（官网链路）；字段最小化，日志中手机号须脱敏
 model TestDriveLead {
   id           String   @id @default(uuid())
   vehicleSlug  String   @db.VarChar(64)
@@ -70,7 +70,7 @@ model TestDriveLead {
   @@index([createdAt])
 }
 
-/// 示意门店
+/// 门店
 model Store {
   id             String   @id @default(uuid())
   name           String
@@ -86,7 +86,7 @@ model Store {
   @@index([city])
 }
 
-/// 示意资讯
+/// 资讯
 model NewsArticle {
   id          String        @id @default(uuid())
   slug        String        @unique

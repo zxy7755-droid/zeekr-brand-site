@@ -37,13 +37,13 @@ test('对比页限定 2-3 款选择范围', () => {
   assert.ok(comparePageSource.includes('MAX_SELECTION'));
 });
 
-test('对比页使用占位图资源，不写外链', () => {
-  assert.ok(comparePageSource.includes('/placeholder/'));
+test('对比页使用品牌图资源，不写外链', () => {
+  assert.ok(comparePageSource.includes('/brand/'));
   const external = comparePageSource.match(/https?:\/\/(?!localhost)[a-z0-9.-]+/gi) ?? [];
   assert.deepEqual(external, [], `发现硬编码域名: ${external.join(', ')}`);
 });
 
-test('对比页含移动端横向滚动与示意值提示', () => {
+test('对比页含移动端横向滚动与参数提示', () => {
   assert.ok(comparePageSource.includes('overflowX'));
-  assert.ok(comparePageSource.includes('示意'));
+  assert.ok(comparePageSource.includes('企鹅汽车'));
 });

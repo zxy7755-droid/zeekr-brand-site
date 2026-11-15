@@ -27,7 +27,7 @@ export class HealthController {
 
     return {
       status: db === 'ok' ? 'ok' : 'degraded',
-      service: 'zeekr-brand-site-api',
+      service: 'penguin-motors-api',
       version: '0.1.0',
       timestamp: new Date().toISOString(),
       db,

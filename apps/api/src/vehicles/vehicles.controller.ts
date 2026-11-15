@@ -139,13 +139,13 @@ export class VehiclesController {
   private toVehicleDetailDto(v: Vehicle): VehicleDetailDto {
     const highlights: VehicleHighlight[] = [];
     if (v.rangeKm != null) {
-      highlights.push({ label: '续航（示意）', value: `${v.rangeKm} km` });
+      highlights.push({ label: '续航', value: `${v.rangeKm} km` });
     }
     if (v.batteryKwh != null) {
-      highlights.push({ label: '电池容量（示意）', value: `${v.batteryKwh} kWh` });
+      highlights.push({ label: '电池容量', value: `${v.batteryKwh} kWh` });
     }
     if (v.badge) {
-      highlights.push({ label: '示意标签', value: v.badge });
+      highlights.push({ label: '标签', value: v.badge });
     }
 
     return {

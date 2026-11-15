@@ -37,6 +37,6 @@ test('代码中不硬编码非 localhost 域名', () => {
   assert.deepEqual(external, [], `发现硬编码域名: ${external.join(', ')}`);
 });
 
-test('免责声明存在', () => {
+test('版权信息存在', () => {
   assert.ok(contractSource.includes('DISCLAIMER'));
 });

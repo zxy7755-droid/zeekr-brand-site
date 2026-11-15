@@ -25,7 +25,7 @@ describe('HealthController', () => {
     const payload = await (await buildController()).check();
 
     expect(payload.status).toBe('ok');
-    expect(payload.service).toBe('zeekr-brand-site-api');
+    expect(payload.service).toBe('penguin-motors-api');
     expect(payload.db).toBe('ok');
     expect(new Date(payload.timestamp).toString()).not.toBe('Invalid Date');
   });
