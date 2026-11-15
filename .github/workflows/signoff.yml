@@ -1,0 +1,48 @@
+name: Contract sign-off
+
+# A dedicated, auditable sign-off gate. The `contract-signoff` environment
+# requires the human signer to approve before the job starts; GitHub records
+# reviewer, timestamp and commit on the workflow run.
+# PR review cannot be used: the PR author and the CODEOWNER are the same
+# GitHub account, and GitHub does not allow authors to approve their own PR.
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: '本次签收范围'
+        required: true
+        default: 'P1 契约 / REQ-002 / 品牌切换 / 双环境拆分'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: contract-signoff
+  cancel-in-progress: false
+
+jobs:
+  signoff:
+    name: sign-off
+    runs-on: ubuntu-latest
+    environment:
+      name: contract-signoff
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify sign-off ledger
+        run: |
+          set -euo pipefail
+          test -f docs/delivery/signoff.md
+          grep -q "契约签收台账" docs/delivery/signoff.md
+          echo "签收台账已就位"
+
+      - name: Record sign-off evidence
+        run: |
+          set -euo pipefail
+          echo "签收范围: ${{ inputs.scope }}"
+          echo "触发人: ${{ github.actor }}"
+          echo "审批人: 见本 run 的 Approvals 记录（contract-signoff 环境）"
+          echo "时间: $(date -u +%FT%TZ)"
+          echo "基线 commit: ${{ github.sha }}"
+          echo "本 run 与审批记录共同构成签收证据"

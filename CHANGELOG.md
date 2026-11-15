@@ -17,6 +17,11 @@
 - `monitor.yml` 改为双域名每 15 分钟探活
 - prod 库执行同一份迁移与企鹅汽车 seed；部署机升配至 4核8G 承载四容器
 
+## [SIGNOFF-FIX] - 2026-11-15
+- PR #17 合并（`df2adcf2`），四个批次签收完成；如实标注首批因「作者自审」限制无 Approve review 留痕
+- 新增 `signoff.yml` + `contract-signoff` Environment：签收改为在 Actions 审批环境，GitHub 记录审批人/时间/commit
+- `signoff.md` 回填签收状态与平台需求 ZBS-3；`design.md` 第 8 节区分签收门与代码合并门
+
 ## [SIGNOFF] - 2026-11-15
 - 新增 `docs/delivery/signoff.md`：P1 契约 / REQ-002 / 品牌切换 / 双环境拆分的签收台账与规则
 - 签收动作改为 **GitHub PR 的 CODEOWNER Approve**（review 记录即证据），不再用本地签收单或对话确认
