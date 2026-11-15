@@ -21,16 +21,30 @@ set -a
 . /etc/zeekr/mysql.env
 set +a
 : "${DATABASE_URL_PROD:?DATABASE_URL_PROD missing}"
+# 0b. Optional CNB registry override; when absent the GHCR default stays in effect.
+if [ -f /etc/zeekr/registry.env ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . /etc/zeekr/registry.env
+  set +a
+fi
+IMAGE_PREFIX=${IMAGE_PREFIX:-ghcr.io/zxy7755-droid/zeekr-brand-site}
+
 
 if [ -f "$ENV_FILE" ]; then cp "$ENV_FILE" "$PREV_FILE"; fi
 
 cat > "$ENV_FILE.tmp" <<EOF
 IMAGE_TAG=$SHA
+IMAGE_PREFIX=$IMAGE_PREFIX
 DATABASE_URL=$DATABASE_URL_PROD
 EOF
 chmod 600 "$ENV_FILE.tmp"
 mv "$ENV_FILE.tmp" "$ENV_FILE"
 
+if [ -n "${CNB_REGISTRY_TOKEN:-}" ]; then
+  printf '%s' "$CNB_REGISTRY_TOKEN" | docker login docker.cnb.cool \
+    --username "${CNB_REGISTRY_USER:-cnb}" --password-stdin
+fi
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE" pull
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE" up -d --remove-orphans
 

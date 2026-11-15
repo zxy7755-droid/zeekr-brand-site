@@ -32,6 +32,13 @@
 - `promote.yml` 绑定 `production` Environment，生产晋升需人工审批；分支保护 + CODEOWNERS 作为签收门
 - `design.md` 第 8 节明确 GitHub 管事实源与签收、平台管流程状态的分工
 
+## [CNB-MIGRATION-BLUEPRINT] - 2026-11-15
+- 全量去 GitHub 的执行蓝图 `docs/delivery/cnb-migration.md`：边界、前置条件、CNB OPENAPI 端点、平台 provider 改造清单、六阶段切换与回退、校验清单
+- 新增 `.cnb.yml`（CI 三 job / 构建推制品库 / staging 部署 / 15 分钟探活 / tag_deploy 部署与签收）
+- 新增 `.cnb/tag_deploy.yml`（contract-signoff / staging / production 三环境 + 审批前置条件）与 `.cnb/codeowners`
+- 部署编排镜像前缀改为 `${IMAGE_PREFIX:-...}`，两个 deploy 脚本支持 `/etc/zeekr/registry.env` 与可选 `docker login docker.cnb.cool`；**默认行为不变，GitHub 链路未受影响**
+- 平台层尚未改造：需为 LoopForge 新增 cnb provider 并重建镜像，见蓝图第 4 节
+
 ## [Unreleased]
 
 ### 治理
