@@ -17,6 +17,10 @@
 - `monitor.yml` 改为双域名每 15 分钟探活
 - prod 库执行同一份迁移与企鹅汽车 seed；部署机升配至 4核8G 承载四容器
 
+## [SIGNOFF-EVIDENCE] - 2026-11-15
+- `contract-signoff` 环境审批通过：run `43695604087` completed success，审批人 `zxy7755-droid`，四个批次取得正式可审计签收证据
+- `signoff.md` 回填签收状态与证据链；修订规则：签收人明确授权时可用其个人凭据落地审批，须在备注注明来源
+
 ## [SIGNOFF-FIX] - 2026-11-15
 - PR #17 合并（`df2adcf2`），四个批次签收完成；如实标注首批因「作者自审」限制无 Approve review 留痕
 - 新增 `signoff.yml` + `contract-signoff` Environment：签收改为在 Actions 审批环境，GitHub 记录审批人/时间/commit

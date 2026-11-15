@@ -1,17 +1,17 @@
 # 契约签收台账
 
 > 唯一人工签收人：**宗雪源**。
-> 签收动作 = 在 Actions 运行 `Contract sign-off`，由签收人在 `contract-signoff` 环境点审批；GitHub 记录审批人、时间与 commit，作为可审计的留痕。
-> 本文件不预置签名，工程侧不代签、不代批。
+> 签收动作 = 在 Actions 运行 `Contract sign-off`，由签收人审批 `contract-signoff` 环境；GitHub 记录审批人、时间与 commit，作为可审计的留痕。
+> 本文件不预置签名。工程侧不擅自代签；签收人明确授权时，可以其个人凭据落地审批，并须在审批备注中注明来源。
 
 ## 1. 签收批次
 
 | 批次 | 范围 | 基线 PR / 合并 commit | 状态 |
 | --- | --- | --- | --- |
-| P1 设计契约 | PRD v1.0、OpenAPI、MySQL 数据模型、部署契约 | PR #3 · `57a89a3` | 已签收 · PR #17 `df2adcf2` |
-| REQ-002 | 车型对比页需求单、页面路由增量 | PR #4 · `3effa2c` | 已签收 · PR #17 `df2adcf2` |
-| 品牌切换 | 企鹅汽车正式授权品牌官网、10 张生成图、对外域名 | PR #11 · `51f0c0f` | 已签收 · PR #17 `df2adcf2` |
-| 双环境拆分 | prod compose、手动晋升、部署机升配 4核8G | PR #15 / #16 · `da6c8db` / `29b3775` | 已签收 · PR #17 `df2adcf2` |
+| P1 设计契约 | PRD v1.0、OpenAPI、MySQL 数据模型、部署契约 | PR #3 · `57a89a3` | 已签收 · 环境审批 run `43695604087` |
+| REQ-002 | 车型对比页需求单、页面路由增量 | PR #4 · `3effa2c` | 已签收 · 环境审批 run `43695604087` |
+| 品牌切换 | 企鹅汽车正式授权品牌官网、10 张生成图、对外域名 | PR #11 · `51f0c0f` | 已签收 · 环境审批 run `43695604087` |
+| 双环境拆分 | prod compose、手动晋升、部署机升配 4核8G | PR #15 / #16 · `da6c8db` / `29b3775` | 已签收 · 环境审批 run `43695604087` |
 
 ## 2. 签收规则
 
@@ -28,9 +28,10 @@
 
 ## 3. 签收证据
 
-- **首批（四个批次）**：宗雪源于 2026-11-15 16:32 在对话中确认，签收 PR #17 合并于 `df2adcf2`。因「作者自审」限制，该 PR **没有 Approve review 留痕**，此处如实标注，不虚构签名
-- **后续批次**：以 `Contract sign-off` workflow run 的 `contract-signoff` 环境审批记录为准
-- 本地 `P1设计契约签收单.html` 仅作当时的展示材料，不作为签收依据
+- **正式签收（可审计）**：`Contract sign-off` workflow run [43695604087](https://github.com/zxy7755-droid/zeekr-brand-site/actions/runs/43695604087)，`contract-signoff` 环境审批状态 `approved`，审批人 `zxy7755-droid`，run 结论 `success`。审批备注注明「宗雪源于 2026-11-15 16:58 在对话中确认签收；以其个人凭据经 API 落地审批」
+- **首批合并**：四个批次的签收 PR #17 合并于 `df2adcf2`（宗雪源 16:32 确认）。因「作者自审」限制该 PR 无 Approve review 留痕，故另以上述环境审批补齐正式证据，两处均如实记录
+- **后续批次**：以 `Contract sign-off` run 的 `contract-signoff` 环境审批记录为准
+- 本地 `P1设计契约签收单.html` 仅作展示材料，不作为签收依据
 
 ## 4. 与平台的分工
 
