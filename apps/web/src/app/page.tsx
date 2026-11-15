@@ -16,35 +16,32 @@ const NEWS = [
 export default function HomePage() {
   return (
     <main>
-      <section style={{ position: 'relative', height: 480, overflow: 'hidden', background: '#0b1b33' }}>
-        <Image
-          src="/brand/hero.jpg"
-          alt="企鹅汽车纯电旗舰车型"
-          fill
-          priority
-          style={{ objectFit: 'cover', objectPosition: 'center 58%' }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(90deg, rgba(6,20,42,0.82) 0%, rgba(6,20,42,0.28) 60%, rgba(6,20,42,0) 100%)',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            padding: '0 8%',
-            color: '#fff',
-          }}
-        >
-          <p style={{ letterSpacing: 4, fontSize: 13, margin: 0, opacity: 0.85 }}>PENGUIN MOTORS</p>
-          <h1 style={{ fontSize: 46, margin: '14px 0 12px', lineHeight: 1.2 }}>向前的每一步，都更从容</h1>
-          <p style={{ fontSize: 17, margin: 0, maxWidth: 460, lineHeight: 1.7, opacity: 0.92 }}>
-            企鹅汽车纯电系列，以设计、续航与安全，重新定义日常出行。
-          </p>
-          <div style={{ display: 'flex', gap: 12, marginTop: 28 }}>
-            <a href="#vehicles" style={{ background: '#0060FF', color: '#fff', padding: '11px 24px', borderRadius: 4, textDecoration: 'none', fontSize: 14 }}>探索车型</a>
-            <a href="/compare" style={{ border: '1px solid rgba(255,255,255,0.7)', color: '#fff', padding: '11px 24px', borderRadius: 4, textDecoration: 'none', fontSize: 14 }}>车型对比</a>
-          </div>
+      <section
+        aria-label="企鹅汽车纯电旗舰车型"
+        style={{
+          position: 'relative',
+          height: 480,
+          overflow: 'hidden',
+          backgroundColor: '#0b1b33',
+          backgroundImage:
+            'linear-gradient(90deg, rgba(6,20,42,0.88) 0%, rgba(6,20,42,0.48) 52%, rgba(6,20,42,0.05) 100%), url(/brand/hero.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center 58%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          padding: '0 8%',
+          color: '#fff',
+        }}
+      >
+        <p style={{ letterSpacing: 4, fontSize: 13, margin: 0, opacity: 0.85 }}>PENGUIN MOTORS</p>
+        <h1 style={{ fontSize: 46, margin: '14px 0 12px', lineHeight: 1.2 }}>向前的每一步，都更从容</h1>
+        <p style={{ fontSize: 17, margin: 0, maxWidth: 460, lineHeight: 1.7, opacity: 0.92 }}>
+          企鹅汽车纯电系列，以设计、续航与安全，重新定义日常出行。
+        </p>
+        <div style={{ display: 'flex', gap: 12, marginTop: 28 }}>
+          <a href="#vehicles" style={{ background: '#0060FF', color: '#fff', padding: '11px 24px', borderRadius: 4, textDecoration: 'none', fontSize: 14 }}>探索车型</a>
+          <a href="/compare" style={{ border: '1px solid rgba(255,255,255,0.7)', color: '#fff', padding: '11px 24px', borderRadius: 4, textDecoration: 'none', fontSize: 14 }}>车型对比</a>
         </div>
       </section>
 
