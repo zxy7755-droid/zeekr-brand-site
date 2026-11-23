@@ -8,7 +8,7 @@
 | 仓库 | `zeekr-brand-site`（GitHub `zxy7755-droid/zeekr-brand-site`） |
 | 基线 / 工作分支 | `main @ 7c00fa7`；`feature/requirement-4-20261123-0509` |
 | 上游 | `.agentflow/inputs/design/design.md`（pass）；`.agentflow/inputs/clarify/clarify.md`（pass） |
-| 状态 | 实现完成，硬门禁真实 exit 0，待 PR 与签收 |
+| 状态 | 实现完成，硬门禁真实 exit 0；PR #23 已开，待签收 |
 
 > 本文件是运行工作区根目录的 SOP 产物。同内容已存为仓库内 `docs/delivery/implementation-REQ-003.md` 随 PR 入库；
 > 仓库已有的 `docs/delivery/design.md`（工程契约唯一定义处）未被覆盖。
@@ -145,3 +145,12 @@ api unit test → web build → api contract test，全部 `[ok]`。
 - Agent 只开 PR，**不合并 main**；合并与签收由唯一签收人宗雪源（宗老板）完成。
 - 角色分离：需求定型 → 方案设计 → 实现（本文）→ 独立评审 → 硬门禁 → 签收；实现者不自审。
 - 未写入任何凭据、生产运维配置或个人信息；日志仅含四个结构化字段，无手机号等 PII。
+
+---
+
+## 7. PR 交付
+
+- 工作分支已 push 至 GitHub；PR #23：<https://github.com/zxy7755-droid/zeekr-brand-site/pull/23>
+  （head `feature/requirement-4-20261123-0509` → base `main`，状态 open，**未合并**）。
+- PR 描述逐条引用第 4 节的真实命令与退出码，并明确标注未运行的浏览器手动验收。
+- 合并与签收由宗雪源（宗老板）在 GitHub PR 上完成。
