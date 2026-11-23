@@ -2,7 +2,7 @@
 
 ## REQ-003 · `/compare` 加载与错误态 + `GET /vehicles` 请求日志（不改契约）— 本轮交付
 
-- 平台工作项 `issue-1795410586564260935`；基线 `main @ 7c00fa7` → 工作分支 `feature/requirement-4-20261123-0509`，HEAD `1d28bf4`。
+- 平台工作项 `issue-1795410586564260935`；基线 `main @ 7c00fa7` → 工作分支 `feature/requirement-4-20261123-0509`，验证时 HEAD `1d28bf4`、交付文档提交后 HEAD `06b46d4`。
 - 交付 PR：[#23](https://github.com/zxy7755-droid/zeekr-brand-site/pull/23)（`base=main`，`state=open`、`merged=false`，GitHub API 实测 HTTP 200）。
 - 本轮完整汇总见 [`delivery-REQ-003.md`](delivery-REQ-003.md)（工作区根同名文件同步留痕）；实现/设计/需求留痕见 `implementation-REQ-003.md` / `design-REQ-003.md` / `requirement-REQ-003.md`。
 - 真实验证：`bash scripts/hard-gate.sh` → exit 0（`[gate] ALL PASSED`）；`npm run test --prefix apps/web` → exit 0（15/15）。门禁不含 web 单测，已单独执行。
