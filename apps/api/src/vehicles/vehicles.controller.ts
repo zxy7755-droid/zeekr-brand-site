@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Controller,
   Get,
+  Logger,
   NotFoundException,
   Param,
   Query,
@@ -54,6 +55,8 @@ interface VehicleDetailDto extends VehicleDto {
 
 @Controller(RESOURCE_ROUTES.vehicles)
 export class VehiclesController {
+  private readonly logger = new Logger(VehiclesController.name);
+
   constructor(private readonly vehicles: VehiclesService) {}
 
   @Get()
@@ -63,23 +66,31 @@ export class VehiclesController {
     @Query('series') series?: string,
     @Query('status') statusRaw?: string,
   ): Promise<{ items: VehicleDto[]; total: number; page: number; pageSize: number }> {
-    const page = this.parseIntParam(pageRaw, 'page', 1, 1);
-    const pageSize = this.parseIntParam(pageSizeRaw, 'pageSize', 20, 1, 100);
+    const startedAt = Date.now();
+    let outcome: 'success' | 'error' = 'error';
+    try {
+      const page = this.parseIntParam(pageRaw, 'page', 1, 1);
+      const pageSize = this.parseIntParam(pageSizeRaw, 'pageSize', 20, 1, 100);
 
-    if (statusRaw !== undefined && !STATUS_VALUES.includes(statusRaw as (typeof STATUS_VALUES)[number])) {
-      throw new BadRequestException(
-        this.errorBody(400, 'Bad Request', `status 取值无效：${statusRaw}`),
-      );
+      if (statusRaw !== undefined && !STATUS_VALUES.includes(statusRaw as (typeof STATUS_VALUES)[number])) {
+        throw new BadRequestException(
+          this.errorBody(400, 'Bad Request', `status 取值无效：${statusRaw}`),
+        );
+      }
+
+      const result = await this.vehicles.list({ page, pageSize, series, status: statusRaw });
+
+      const response = {
+        items: result.items.map((v) => this.toVehicleDto(v)),
+        total: result.total,
+        page: result.page,
+        pageSize: result.pageSize,
+      };
+      outcome = 'success';
+      return response;
+    } finally {
+      this.logRequest(startedAt, outcome);
     }
-
-    const result = await this.vehicles.list({ page, pageSize, series, status: statusRaw });
-
-    return {
-      items: result.items.map((v) => this.toVehicleDto(v)),
-      total: result.total,
-      page: result.page,
-      pageSize: result.pageSize,
-    };
   }
 
   @Get(':slug')
@@ -110,6 +121,25 @@ export class VehiclesController {
 
   private errorBody(status: number, title: string, detail: string): ErrorBody {
     return { status, title, detail, traceId: randomUUID() };
+  }
+
+  /**
+   * GET /vehicles 的结构化请求日志：每次调用恰好一条，只输出四个字段，
+   * 不含 query / 请求头 / Cookie / 手机号等噪声或 PII。日志自身异常不得影响主响应。
+   */
+  private logRequest(startedAt: number, result: 'success' | 'error'): void {
+    try {
+      this.logger.log(
+        JSON.stringify({
+          method: 'GET',
+          path: `/${RESOURCE_ROUTES.vehicles}`,
+          durationMs: Math.max(0, Date.now() - startedAt),
+          result,
+        }),
+      );
+    } catch {
+      // 日志失败不得影响主响应
+    }
   }
 
   private toVehicleDto(v: Vehicle): VehicleDto {

@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 
 import { apiUrl } from '@/lib/contract';
+import { describeCompareError, type CompareErrorState } from '@/lib/compare-error.mjs';
 
 interface Vehicle {
   id: string;
@@ -81,8 +82,9 @@ const DIMENSIONS: Dimension[] = [
 
 export default function ComparePage() {
   const [vehicles, setVehicles] = useState<Vehicle[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<CompareErrorState | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -93,7 +95,10 @@ export default function ComparePage() {
       try {
         const res = await fetch(apiUrl('/vehicles?pageSize=50'));
         if (!res.ok) {
-          throw new Error(`加载车型列表失败（HTTP ${res.status}）`);
+          if (!cancelled) {
+            setError(describeCompareError(res));
+          }
+          return;
         }
         const data = (await res.json()) as VehicleListResponse;
         if (!cancelled) {
@@ -101,7 +106,7 @@ export default function ComparePage() {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : '加载车型列表失败');
+          setError(describeCompareError(err));
         }
       }
     }
@@ -110,7 +115,7 @@ export default function ComparePage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadToken]);
 
   const selectedVehicles = useMemo(
     () => (vehicles ?? []).filter((v) => selected.includes(v.slug)),
@@ -129,6 +134,10 @@ export default function ComparePage() {
     });
   }
 
+  function retry(): void {
+    setReloadToken((n) => n + 1);
+  }
+
   return (
     <main style={{ fontFamily: 'system-ui, sans-serif', padding: 32 }}>
       <h1>企鹅汽车 · 车型对比</h1>
@@ -137,12 +146,29 @@ export default function ComparePage() {
       </p>
 
       {error && (
-        <p role="alert" style={{ color: '#b00020' }} data-testid="compare-error">
-          {error}
-        </p>
+        <div
+          role="alert"
+          data-testid="compare-error"
+          style={{
+            color: '#b00020',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 12,
+            alignItems: 'center',
+          }}
+        >
+          <p style={{ margin: 0 }}>{error.message}</p>
+          <button type="button" data-testid="compare-retry" onClick={retry}>
+            重试加载车型
+          </button>
+        </div>
       )}
 
-      {!error && vehicles === null && <p data-testid="compare-loading">车型数据加载中…</p>}
+      {!error && vehicles === null && (
+        <p role="status" aria-live="polite" data-testid="compare-loading">
+          车型数据加载中…
+        </p>
+      )}
 
       {!error && vehicles !== null && vehicles.length === 0 && (
         <p data-testid="compare-empty">暂无可对比的车型，请稍后再来。</p>
