@@ -4,8 +4,8 @@
 | --- | --- |
 | 平台工作项 | `issue-1795410586564260935`（来源：本地；外部 ID：无） |
 | 仓库 / 主干 | `zeekr-brand-site`（GitHub `zxy7755-droid/zeekr-brand-site`），唯一交付主干 |
-| 基线 / 工作分支 | `main @ 7c00fa7` → `feature/requirement-4-20261123-0509`；验证时代码 HEAD `1d28bf4ef293b938cca4a3a7e41efa6d1ccbf65a`，交付文档提交并推送后 HEAD `06b46d42e9b13691fbac913b6d8e8e93c23da19f` |
-| 交付 PR | [#23](https://github.com/zxy7755-droid/zeekr-brand-site/pull/23)：`state=open`、`merged=false`、`base=main`、`head=feature/requirement-4-20261123-0509`，推送后 `head_sha=06b46d4`（GitHub API 实测 HTTP 200）；描述含真实命令/退出码/已知限制并引用交付汇总 |
+| 基线 / 工作分支 | `main @ 7c00fa7` → `feature/requirement-4-20261123-0509`；验证时代码 HEAD `1d28bf4ef293b938cca4a3a7e41efa6d1ccbf65a`，交付汇总文档随分支后续提交推送（当前远端 HEAD 以 `git ls-remote` / PR 页面为准） |
+| 交付 PR | [#23](https://github.com/zxy7755-droid/zeekr-brand-site/pull/23)：GitHub API 实测 HTTP 200、`state=open`、`merged=false`、`base=main`、`head=feature/requirement-4-20261123-0509`，`head_sha` 随交付文档提交更新；描述含真实命令/退出码/已知限制并引用交付汇总 |
 | 交付日期 | 2026-11-23 |
 | 签收人 | 宗雪源（宗老板）；Agent **只开 PR、不合并 main**（平台 sign-off/decision：`人工批准继续`） |
 | 本节点结论 | 前后端改动、双份独立评审、硬门禁与 PR 状态均已核对；PR #23 为 open 且目标为 main，交付完成 |
