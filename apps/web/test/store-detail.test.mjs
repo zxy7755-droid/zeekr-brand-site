@@ -55,6 +55,36 @@ test('语义化结构、示意数据标注与可点击 tel 链接', () => {
   assert.ok(pageSource.includes('暂无联系电话'));
 });
 
+test('M1：所有状态（含非 ready 态）都在 <main> 内渲染唯一主标题', () => {
+  // 恰好一个 <h1>，且无条件渲染在 <main> 内、ready 条件分支之外；
+  // 非 ready 态使用固定标题「门店详情」，保证读屏用户始终有页面主标题。
+  const h1Count = (pageSource.match(/<h1\b/g) ?? []).length;
+  assert.equal(h1Count, 1, `应只有一个 <h1>，实际 ${h1Count} 个`);
+  const mainIdx = pageSource.indexOf('<main');
+  const h1Idx = pageSource.indexOf('<h1');
+  const readyIdx = pageSource.indexOf("state.kind === 'ready' && (");
+  assert.ok(mainIdx !== -1 && h1Idx > mainIdx, '<h1> 必须位于 <main> 内');
+  assert.ok(readyIdx !== -1, '缺少 ready 条件分支');
+  assert.ok(h1Idx < readyIdx, '<h1> 必须无条件渲染，不能只在 ready 分支内');
+  assert.ok(pageSource.includes('const heading = state.kind === '), '缺少按状态计算的 heading');
+  assert.ok(pageSource.includes("'门店详情'"), '非 ready 态缺少固定主标题「门店详情」');
+});
+
+test('M2：合法 JSON 但结构异常走 error 态，不误判为空列表', () => {
+  assert.ok(
+    pageSource.includes('if (!Array.isArray(data?.items))'),
+    '缺少对 items 结构的显式校验',
+  );
+  assert.ok(
+    pageSource.includes("throw new Error('门店列表数据结构异常')"),
+    '结构异常必须抛错，交由 error 态与 role="alert" 承接',
+  );
+  assert.ok(
+    !pageSource.includes('Array.isArray(data?.items) ? data.items : []'),
+    '不得再把结构异常静默退化为空数组（空列表态）',
+  );
+});
+
 test('样式含焦点可见与长文本防溢出规则', () => {
   assert.ok(cssSource.includes(':focus-visible'));
   assert.ok(cssSource.includes('overflow-wrap'));

@@ -69,7 +69,12 @@ export default function StoreDetailPage({ params }: { params: { id: string } }) 
           throw new Error(`HTTP ${res.status}`);
         }
         const data = (await res.json()) as StoreList;
-        const items = Array.isArray(data?.items) ? data.items : [];
+        // 合法 JSON 但结构异常（{} / null / {"items":"bad"}）属于上游契约退化，
+        // 走 error 态与 role="alert"，不得误判为「空列表」（M2）。
+        if (!Array.isArray(data?.items)) {
+          throw new Error('门店列表数据结构异常');
+        }
+        const items = data.items;
         if (cancelled) return;
         if (items.length === 0) {
           setState({ kind: 'empty' });
@@ -91,8 +96,14 @@ export default function StoreDetailPage({ params }: { params: { id: string } }) 
     };
   }, [params.id]);
 
+  // 所有状态均渲染唯一页面主标题：ready 用门店名称，其余状态用固定标题，
+  // 保证加载/空/未找到/错误态下读屏用户仍有主标题与定位锚点（M1）。
+  const heading = state.kind === 'ready' ? state.store.name || '—' : '门店详情';
+
   return (
     <main className={styles.main} data-testid="store-detail">
+      <h1 className={styles.title}>{heading}</h1>
+
       {state.kind === 'loading' && (
         <p data-testid="store-detail-loading">门店信息加载中…</p>
       )}
@@ -113,7 +124,6 @@ export default function StoreDetailPage({ params }: { params: { id: string } }) 
 
       {state.kind === 'ready' && (
         <article data-testid="store-detail-ready">
-          <h1 className={styles.title}>{state.store.name || '—'}</h1>
           <dl className={styles.list}>
             <div className={styles.row}>
               <dt>门店地址</dt>

@@ -24,14 +24,16 @@
 
 ## 2. 实现要点
 
-- **取数链路唯一**：`fetch(apiUrl('/stores'))` → 校验 `res.ok` → `res.json() as StoreList` → `Array.isArray(items)` 守卫 →
-  `items.find((item) => item.id === params.id)` 严格相等匹配。页面 `import { apiUrl, BASE_PATH } from '@/lib/contract'`，
-  无硬编码域名、无 `fixture` / `mock-data` 回退、无 `GET /stores/{id}` 新接口。
+- **取数链路唯一**：`fetch(apiUrl('/stores'))` → 校验 `res.ok` → `res.json() as StoreList` → 显式校验 `Array.isArray(data?.items)`
+  （结构异常抛错走 error 态，不静默退化为空列表，见 M2）→ `items.find((item) => item.id === params.id)` 严格相等匹配。
+  页面 `import { apiUrl, BASE_PATH } from '@/lib/contract'`，无硬编码域名、无 `fixture` / `mock-data` 回退、无 `GET /stores/{id}` 新接口。
 - **客户端组件**：`'use client'` + `useState` / `useEffect`，`useEffect` 用 `cancelled` 标志避免卸载后 setState；
   依赖数组含 `params.id`，换 id 重新进入加载态。
 - **五态渲染（四类提示文案）**：加载 `门店信息加载中…`；空列表 `当前暂无门店信息，请稍后再来。`；
   未找到 `未找到该门店，链接可能已失效。`；错误 `门店信息加载失败：${detail}`（`role="alert"`）；
   命中则渲染详情（`data-testid="store-detail-ready"`）。错误态使用 `err instanceof Error ? err.message : '未知错误'` 兜底，不白屏。
+- **主标题（M1）**：`<h1>` 无条件渲染于 `<main>` 内，不放在 ready 分支中；ready 态取门店名称（空值 `—`），
+  其余四态固定为「门店详情」，保证读屏用户在加载 / 空 / 未找到 / 错误态下仍有唯一页面主标题与定位锚点。
 - **字段映射**：名称 `<h1>`（空值 `—`）；地址由 `city · district? · address` 拼接并置于 `<address>`；
   营业时间缺失显示 `暂无营业时间信息`；电话缺失显示 `暂无联系电话`，有值渲染 `<a href={`tel:${digits}`}>`，
   仅保留数字与 `+` 构造 `href`，展示原文；清洗后为空退化为普通文本。不渲染经纬度、不做地图。
@@ -43,6 +45,19 @@
 - **响应式**：`max-width` 居中 + `clamp()` 内边距；长文本 `overflow-wrap: anywhere` + `word-break: break-word`；
   `@media (min-width: 640px)` 下分组为两列。返回链接使用普通 `<a href={BASE_PATH || '/'}>`，避免 Next `<Link>` 与 `basePath` 双前缀。
 
+### 2.1 独立评审修复（M1 / M2）
+
+前端独立评审发现两项低严重度健壮性问题，已在本工作分支修复并提交：
+
+- **M1**：原实现仅在 ready 分支渲染 `<h1>`；当前所有状态统一在 `<main>` 内渲染唯一主标题，
+  ready 用门店名称、非 ready 用「门店详情」。对应新增测试 `M1：所有状态（含非 ready 态）都在 <main> 内渲染唯一主标题`。
+- **M2**：原实现用 `Array.isArray(data?.items) ? data.items : []` 把合法 JSON 但结构异常的响应静默判为「空列表」；
+  当前改为显式 `throw new Error('门店列表数据结构异常')`，交由 error 态 `role="alert"` 承接，避免掩盖契约回退。
+  对应新增测试 `M2：合法 JSON 但结构异常走 error 态，不误判为空列表`。
+
+上述修复曾因实现节点 `lease expired` 停留在未提交工作区；交付节点按「仅修复失败项」完成提交闭环，
+使 HEAD、工作区与本记录一致（前端独立评审 `review-web.md` 的 B1 阻断项由此消解）。未新增业务逻辑，未触碰契约文件。
+
 ## 3. 验证记录（真实命令 / 真实退出码）
 
 所有命令在仓库根 `/workspace/zeekr-brand-site` 执行；依赖通过
@@ -52,7 +67,7 @@
 | --- | --- | --- | --- |
 | 1 | `npm run lint --prefix apps/web` | 0 | `eslint --max-warnings 0`，无警告 |
 | 2 | `npm run typecheck --prefix apps/web` | 0 | `tsc --noEmit` |
-| 3 | `npm run test --prefix apps/web` | 0 | 17 tests / 17 pass / 0 fail（含新增 6 项门店详情测试） |
+| 3 | `npm run test --prefix apps/web` | 0 | 19 tests / 19 pass / 0 fail（6 项门店详情静态检查 + M1 / M2 两项回归断言） |
 | 4 | `npm run build --prefix apps/web` | 0 | `next build`；路由表出现 `ƒ /stores/[id]`，编译与类型检查通过 |
 | 5 | `npm run lint --prefix apps/api` | 0 | 证明 API 侧未破坏 |
 | 6 | `npm run typecheck --prefix apps/api` | 0 | 证明 API 侧未破坏 |
