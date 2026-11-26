@@ -4,7 +4,7 @@ const VEHICLES = [
   { name: '企鹅 P1', type: '纯电轿车', range: '600 km', image: '/brand/vehicle-a.jpg' },
   { name: '企鹅 P2', type: '纯电 SUV', range: '560 km', image: '/brand/vehicle-b.jpg' },
   { name: '企鹅 P3', type: '纯电轿跑', range: '650 km', image: '/brand/vehicle-c.jpg' },
-  { name: '企鹅 P5', type: '纯电旅行车', range: '620 km', image: '/brand/vehicle-d.jpg' },
+  { name: '企鹅 P4', type: '纯电旅行车', range: '620 km', image: '/brand/vehicle-d.jpg' },
 ];
 
 const NEWS = [
