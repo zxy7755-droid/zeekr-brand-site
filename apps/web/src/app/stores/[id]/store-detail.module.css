@@ -1,0 +1,75 @@
+/* 门店详情页：移动优先单列，桌面端分组；不引入任何第三方素材。 */
+.main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: clamp(16px, 5vw, 40px);
+  line-height: 1.6;
+}
+
+.title {
+  margin: 0 0 20px;
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.list {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+}
+
+.row {
+  display: grid;
+  gap: 4px;
+}
+
+.row dt {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.row dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.address {
+  font-style: normal;
+}
+
+.tel {
+  color: #0b62c4;
+  text-decoration: underline;
+}
+
+.tel:focus-visible,
+.backLink:focus-visible {
+  outline: 3px solid #0b62c4;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.error {
+  color: #b00020;
+  font-weight: 600;
+}
+
+.notice,
+.back {
+  margin-top: 20px;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+@media (min-width: 640px) {
+  .list {
+    gap: 20px;
+  }
+
+  .row {
+    grid-template-columns: 120px 1fr;
+    align-items: start;
+  }
+}
