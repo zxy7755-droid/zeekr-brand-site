@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import type { ReactNode } from 'react';
 
-import { DISCLAIMER } from '@/lib/contract';
+import { BASE_PATH, DISCLAIMER } from '@/lib/contract';
 
 export const metadata: Metadata = {
   title: '企鹅汽车 PENGUIN MOTORS | 官方网站',
@@ -36,6 +36,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <a href="/compare" style={{ color: '#0f172a', textDecoration: 'none' }}>车型对比</a>
             <a href="/#technology" style={{ color: '#0f172a', textDecoration: 'none' }}>技术与安全</a>
             <a href="/#news" style={{ color: '#0f172a', textDecoration: 'none' }}>品牌资讯</a>
+            <a href={`${BASE_PATH}/register`} style={{ color: '#0f172a', textDecoration: 'none' }}>注册</a>
           </nav>
         </header>
 

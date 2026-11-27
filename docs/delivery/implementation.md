@@ -104,3 +104,90 @@
 - PR 描述只写已实际验证的结论；未运行项明确标注，不伪造评审 / 门禁 / 签收证据。
 - 交付主干仅 GitHub `zxy7755-droid/zeekr-brand-site`；CNB 仅运行与部署镜像，未推送、未开 MR。
 - 签收由唯一人工签收人完成；本需求在已签收契约范围内，不触发重新签收。
+
+---
+
+# 实现记录 · 用户注册界面 `/register`（issue-1795750262423282263）
+
+| 项 | 值 |
+| --- | --- |
+| 需求身份 | 平台工作项 `issue-1795750262423282263`（来源：本地，外部 ID：无） |
+| 执行角色 | 开发实现（任务书标注「后端服务 / 数据与 API」领域节点；上游已签收需求/设计明确本需求为纯前端界面演示，实际按前端页面实现） |
+| 工作分支 | `feature/requirement-10-20261127-0331`（基线 `af19e6e`，PR 目标 `main`） |
+| 契约基线 | 仓库 `docs/delivery/design.md` + `docs/api/openapi.yaml` v1.0.0（本次零实质改动） |
+| 实现结论 | 完成；硬门禁 `bash scripts/hard-gate.sh` 真实 `exit 0`，末行 `[gate] ALL PASSED`，日志 `reports/hard-gate.log` |
+
+## A1. 范围判定（为何本节点不写后端）
+
+任务书工作领域为「后端服务、数据与 API」，交付物模板为 `apps/api`；但上游 `requirement.md`、
+`prd.md`、已人工批准的 `design.md` 三者一致裁定：本需求为「用户注册（界面演示）」纯前端页面，
+**不开放真实账号注册、不新增任何后端接口 / 数据模型 / OpenAPI 路径**（契约冻结，变更须另开签收 PR）。
+本节点严格按上游定型执行，不擅自扩大范围；`apps/api` 现有实现零改动，契约侧仅做验证留痕。
+
+## A2. 改动清单（仅 6 个文件）
+
+| 文件 | 类型 | 用途 |
+| --- | --- | --- |
+| `apps/web/src/app/register/page.tsx` | 新增 | 客户端组件：表单、客户端校验、密码可见性切换、演示提交反馈 |
+| `apps/web/src/app/register/layout.tsx` | 新增 | 路由级 Server Component，声明页面 metadata 标题（见 A4-1） |
+| `apps/web/src/app/register/register.module.css` | 新增 | 移动优先布局、响应式、焦点环、对比度、减少动态效果 |
+| `apps/web/src/app/layout.tsx` | 修改 | **仅**在 `<nav>` 增加一行「注册」链接，`href={`${BASE_PATH}/register`}`；import 增加 `BASE_PATH` |
+| `apps/web/test/register-page.test.mjs` | 新增 | `node:test` 静态源码检查（7 组，覆盖字段/边界/文案/a11y/样式/导航） |
+| `docs/delivery/design.md` | 修改（仅路由记录） | §3 页面路由表追加 `/register` 行；四处契约路径常量镜像零改动 |
+
+**零改动（已用 `git diff` 对 `main...HEAD` 与工作区双向核对，均无输出）**：
+`docs/api/openapi.yaml`、`apps/api/prisma/schema.prisma`、`apps/api/src/**`、
+`apps/web/src/lib/contract.ts`、`apps/api/src/contract.ts`、`scripts/hard-gate.sh`、
+`.github/workflows/**`、环境变量与部署配置、现有品牌素材。未向 CNB 推送或开 MR。
+
+## A3. 实现要点
+
+- **零副作用提交**：`handleSubmit` 仅 `event.preventDefault()` → 本地 `validate()` → `setState`。
+  合规输入后清空 `values`/`errors`/可见性状态并显示 `role="status"` 提示「未创建真实账号，未提交或存储任何信息。」；
+  源码无 `fetch(` / `apiUrl(` / `localStorage` / `sessionStorage` / `document.cookie` / `console.`。
+- **表单字段**：仅邮箱 `type="email"` + `autoComplete="email"`、密码/确认密码 `autoComplete="new-password"`、
+  知悉声明 `type="checkbox"` 四类；无手机号字段。密码规则 8–64 位且同时含字母与数字；确认密码一致性校验。
+- **校验与可访问性**：`noValidate` 关闭原生气泡，统一行内文案；`aria-invalid` + `aria-describedby` 关联错误；
+  首错 `refs.current[firstInvalid]?.focus()` 聚焦；顶部 `role="alert"` 摘要随错误态挂载；每个 input 有可见 `<label>`；
+  密码切换按钮 `aria-label`（显示密码 / 显示确认密码，可区分）+ `aria-pressed`，仅切换 `type`，不清空值。
+- **隐私口径**：知悉声明使用上游固定全文；不采集手机号、不放无效政策链接；页脚 `DISCLAIMER` 由根布局常驻未改。
+- **响应式/样式**：`.main` 最大宽 720px 居中、`clamp()` 内边距、长文本 `overflow-wrap: anywhere`；
+  输入框与按钮 `min-height: 44px`；`:focus-visible` 3px 焦点环；错误色 `#b00020` 与正文 `#0f172a` 白底高对比；
+  `@media (min-width: 640px)` 宽屏适配；`prefers-reduced-motion` 下关闭动画。
+- **导航入口**：`href={`${BASE_PATH}/register`}`，本地为空前缀即 `/register`，子路径部署自动带前缀，
+  未写死 `/penguin` / `/demo` 或任何域名。
+
+## A4. 验证记录（真实命令 / 真实退出码）
+
+所有命令在仓库根 `/workspace/zeekr-brand-site` 执行；依赖 `npm ci --prefix apps/web`（exit 0）与
+`npm ci --prefix apps/api`（exit 0）安装。
+
+| 顺序 | 命令 | 真实退出码 | 说明 |
+| --- | --- | --- | --- |
+| 1 | `npm run lint --prefix apps/web` | 0 | `eslint --max-warnings 0`，无警告 |
+| 2 | `npm run typecheck --prefix apps/web` | 0 | `tsc --noEmit` |
+| 3 | `npm run test --prefix apps/web` | 0 | 26 tests / 26 pass / 0 fail（原 19 + 新增 7 组注册页静态检查） |
+| 4 | `npm run build --prefix apps/web` | 0 | `next build`；路由表出现 `○ /register` |
+| 5 | `bash scripts/hard-gate.sh` | **0** | 末行 `[gate] ALL PASSED`；日志 `reports/hard-gate.log`（gitignored，不入库） |
+| 6 | `git diff main...HEAD -- docs/api/openapi.yaml apps/api/prisma/schema.prisma apps/web/src/lib/contract.ts apps/api/src/contract.ts scripts/hard-gate.sh .github/workflows/ci.yml` | 0 | 无输出，契约零 diff |
+
+## A5. 已知限制与偏差说明
+
+1. **metadata 放在路由级 `layout.tsx` 而非 `page.tsx`**：上游设计 §3.1 建议两者同文件，但 Next.js 14.2.15
+   明确禁止在 `'use client'` 组件导出 `metadata`（`NEXT_RSC_ERR_CLIENT_METADATA_EXPORT`，已在
+   `next/dist/build/webpack/plugins/wellknown-errors-plugin/parseRSC.js` 核实）。故拆分为 Server Component
+   `layout.tsx` 声明标题 + Client Component `page.tsx` 承载交互；`npm run build` exit 0 证明标题合规且编译通过。
+   静态测试相应断言 `layout.tsx` 中的标题字符串。
+2. **静态测试边界**：`register-page.test.mjs` 为源码文本检查，不等同浏览器真实交互验收；键盘全流程、
+   读屏播报、320/375/768/1440 视口、Network 面板无请求与存储面板无新增条目需由独立评审/QA 节点人工补充，
+   本节点未实测，不写为通过。
+3. **硬门禁不覆盖 web 单测**：`scripts/hard-gate.sh` 与 CI web job 不含 `npm run test --prefix apps/web`，
+   已单独真实执行并记录（A4 表第 3 行）。
+4. **未运行 CI / 浏览器运行时**：GitHub Actions 三 job 由推送后平台运行；本节点只记录本地真实命令结果。
+
+## A6. 交付边界
+
+- 只从 `feature/requirement-10-20261127-0331` 开目标分支 `main` 的 PR，**不合并**。
+- PR 描述只写已实际验证的结论；未运行项明确标注，不伪造评审 / 门禁 / 签收证据。
+- 交付主干仅 GitHub `zxy7755-droid/zeekr-brand-site`；CNB 仅运行与部署镜像，未推送、未开 MR。
+- 本需求在已签收契约范围内，不触发重新签收；签收由唯一人工签收人完成。
