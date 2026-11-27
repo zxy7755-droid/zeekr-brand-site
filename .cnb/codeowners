@@ -1,8 +1,8 @@
 # CNB 保护分支的评审人配置（由 git:reviewer 内置任务读取）
 # 与 GitHub CODEOWNERS 等价：契约、流水线、部署脚本变更必须由签收人评审
-* @xueyuanzong
-/docs/api/ @xueyuanzong
-/docs/delivery/ @xueyuanzong
-/deploy/ @xueyuanzong
-/.cnb.yml @xueyuanzong
-/.cnb/ @xueyuanzong
+* @cnb.dEW8BphkAGA
+/docs/api/ @cnb.dEW8BphkAGA
+/docs/delivery/ @cnb.dEW8BphkAGA
+/deploy/ @cnb.dEW8BphkAGA
+/.cnb.yml @cnb.dEW8BphkAGA
+/.cnb/ @cnb.dEW8BphkAGA
