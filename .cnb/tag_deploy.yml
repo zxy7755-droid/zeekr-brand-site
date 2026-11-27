@@ -1,33 +1,18 @@
-# CNB 部署环境与发布策略（docs.cnb.cool/zh/build/deploy.html）
-# 账号 xueyuanzong 需在切流时替换为 CNB 实际用户名。
-# 审批是可选的：production 不配 require.approver，staging 稳定后自动晋升。
-# 高风险变更（契约变更 / DB migration）走 contract-signoff 环境，审批回流企微卡片。
+# CNB 部署环境：人工门禁统一收敛到 LoopForge 企微卡片（确认 / 返工 / 重试）。
+# CNB 侧不再保留任何需要到平台页面点击的审批；production 在 staging 成功后自动晋升。
 environments:
-  - name: contract-signoff
-    description: 契约签收（高风险变更唯一签收人审批）
-    env:
-      name: contract-signoff
-    permissions:
-      users:
-        - xueyuanzong
-    require:
-      - approver:
-          users:
-            - xueyuanzong
-        title: 契约签收确认
-
   - name: staging
-    description: 预发环境（自动部署，无需审批）
+    description: 预发环境（自动部署）
     env:
       name: staging
 
   - name: production
-    description: 生产环境（staging 部署成功并静默后自动晋升，无需手点）
+    description: 生产环境（staging 部署成功并静默 120s 后自动晋升）
     env:
       name: production
     permissions:
       users:
-        - xueyuanzong
+        - cnb.dEW8BphkAGA
     require:
       - environmentName: staging
         after: 120

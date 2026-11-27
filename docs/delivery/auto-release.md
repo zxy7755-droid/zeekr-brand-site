@@ -47,3 +47,12 @@
 8. （可选过渡）用带 `workflow` scope 的 PAT 应用 `github-actions-patch/` 里的 `cd.yml` / `promote.yml`，让 GitHub 侧在 CNB 切流前也能自动晋升
 
 > 注：全量切换代码托管到 CNB 需要给 LoopForge 新增 `cnb` provider（约 1200–1800 行 Go 补丁，见 `cnb-migration.md` 第 4 节）。当前方案**不改平台源码**：GitHub 继续托管代码，CNB 只做发布层，这样避免了第三方补丁破坏官方升级路径。
+
+## 16:34 目标对齐：人只在企微点卡片
+
+唯一人工动作 = LoopForge 企微卡片上的「确认 / 返工 / 重试」。点确认后：守护脚本自动合并 PR → GitHub CD 构建 → `deploy.sh` 自动 staging → `deploy-prod.sh` 自动生产 → 企微「官网已更新并上线」回执。点返工/重试由平台自动打回上游重跑。
+
+- 删除 CNB `contract-signoff` 环境（原 `require.approver` 需要到 CNB 页面点审批，违反目标）。
+- `production` 环境只保留「staging 已部署 + after 120s」前置条件，无 approver，自动晋升。
+- GitHub `promote.yml` 的 `production` Environment 审批只属于应急回滚入口，日常链路不触发；其工作流文件受 `workflow` scope 限制未改动。
+- CNB 承担构建 / 制品 / 版本 / 部署环境视图；部署执行沿用部署机幂等脚本（自带失败回滚），不把 SSH 私钥搬进 CI。
