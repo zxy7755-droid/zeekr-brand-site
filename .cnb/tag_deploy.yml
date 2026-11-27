@@ -1,8 +1,10 @@
-# CNB 部署环境与审批门（等价 GitHub Environments）
-# 用户名 xueyuanzong 需替换为 CNB 实际账号；语法依据 docs.cnb.cool/zh/build/deploy.html
+# CNB 部署环境与发布策略（docs.cnb.cool/zh/build/deploy.html）
+# 账号 xueyuanzong 需在切流时替换为 CNB 实际用户名。
+# 审批是可选的：production 不配 require.approver，staging 稳定后自动晋升。
+# 高风险变更（契约变更 / DB migration）走 contract-signoff 环境，审批回流企微卡片。
 environments:
   - name: contract-signoff
-    description: 契约签收（唯一签收人审批后放行）
+    description: 契约签收（高风险变更唯一签收人审批）
     env:
       name: contract-signoff
     permissions:
@@ -20,7 +22,7 @@ environments:
       name: staging
 
   - name: production
-    description: 生产环境（需 staging 已部署 + 签收人审批）
+    description: 生产环境（staging 部署成功并静默后自动晋升，无需手点）
     env:
       name: production
     permissions:
@@ -28,7 +30,4 @@ environments:
         - xueyuanzong
     require:
       - environmentName: staging
-      - approver:
-          users:
-            - xueyuanzong
-        title: 生产晋升审批
+        after: 120
