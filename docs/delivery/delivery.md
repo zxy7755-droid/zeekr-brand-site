@@ -114,7 +114,8 @@
 
 ## E. PR
 
-- PR 链接：<!-- PR_LINK -->待创建<!-- /PR_LINK -->
+- PR 链接：https://github.com/zxy7755-droid/zeekr-brand-site/pull/28
+- 源分支 → 目标分支：`feature/requirement-9-20261127-0248` → `main`（open，未合并）
 
 ## F. 待人工决策
 
