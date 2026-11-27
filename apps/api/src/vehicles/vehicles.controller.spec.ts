@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 
 import { VehiclesController } from './vehicles.controller';
@@ -82,6 +83,23 @@ describe('VehiclesController', () => {
       expect.objectContaining({ status: 'DRAFT' }),
     );
     expect(result.items).toEqual([]);
+  });
+
+  it('GET /vehicles 成功时输出含 method/path/durationMs/result 的结构化日志', async () => {
+    const logSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation(() => undefined);
+    try {
+      vehiclesServiceMock.list.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
+
+      await controller.list(undefined, undefined, undefined, undefined);
+
+      expect(logSpy).toHaveBeenCalledTimes(1);
+      const payload = JSON.parse(String(logSpy.mock.calls[0][0]));
+      expect(payload).toMatchObject({ method: 'GET', path: '/vehicles', result: 'success' });
+      expect(typeof payload.durationMs).toBe('number');
+      expect(payload.durationMs).toBeGreaterThanOrEqual(0);
+    } finally {
+      logSpy.mockRestore();
+    }
   });
 
   it('GET /vehicles/{slug} 命中时返回 VehicleDetail，含 highlights/galleryKeys', async () => {
