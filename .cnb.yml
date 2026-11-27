@@ -1,6 +1,6 @@
 # CNB 全量迁移流水线（与 .github/workflows 一一对应）
 #   pull_request            -> ci.yml        三 job 门禁
-#   main.push               -> cd.yml        构建镜像 + 部署 staging
+#   main.push               -> cd.yml        构建镜像 + staging + 自动晋升生产
 #   tag_deploy.production   -> promote.yml   人工晋升生产
 #   tag_deploy.contract-*   -> signoff.yml   契约签收审批
 #   "crontab: */15 * * * *" -> monitor.yml   双域名探活
@@ -86,25 +86,42 @@ main:
             docker push "$PREFIX-web:$CNB_COMMIT"
             docker push "$PREFIX-api:$CNB_COMMIT"
 
-    - name: deploy-staging
+    - name: staging-and-production
       runner: { cpus: 2 }
       docker: { image: node:20-bookworm-slim }
       stages:
-        - name: ssh deploy staging
+        - name: auto release staging to production
           script: |
             set -eu
             if [ "${CNB_DEPLOY_ENABLED:-}" != "true" ]; then
-              echo "pre-cutover: skip staging deploy"
+              echo "pre-cutover: skip deploy (inject deploy secrets, then set CNB_DEPLOY_ENABLED=true)"
               exit 0
             fi
             install -m 700 -d "$HOME/.ssh"
             printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/id_ed25519"
             chmod 600 "$HOME/.ssh/id_ed25519"
             ssh-keyscan -H "$DEPLOY_HOST" >> "$HOME/.ssh/known_hosts" 2>/dev/null
-            ssh -i "$HOME/.ssh/id_ed25519" -o StrictHostKeyChecking=yes \
-              "$DEPLOY_USER@$DEPLOY_HOST" "bash /opt/zeekr/deploy.sh $CNB_COMMIT"
+            SSH="ssh -i $HOME/.ssh/id_ed25519 -o StrictHostKeyChecking=yes $DEPLOY_USER@$DEPLOY_HOST"
+            $SSH "bash /opt/zeekr/deploy.sh $CNB_COMMIT"
+            stage_code=""
+            for i in $(seq 1 12); do
+              stage_code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 https://stage.penguin.www.xueyuanzong.top/ || true)
+              [ "$stage_code" = "200" ] && break
+              sleep 10
+            done
+            [ "$stage_code" = "200" ] || { echo "staging unhealthy"; exit 1; }
+            echo "staging healthy ($CNB_COMMIT), soak 120s"
+            sleep 120
+            $SSH "bash /opt/zeekr/deploy-prod.sh $CNB_COMMIT"
+            prod_code=""
+            for i in $(seq 1 12); do
+              prod_code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 https://penguin.www.xueyuanzong.top/ || true)
+              [ "$prod_code" = "200" ] && break
+              sleep 10
+            done
             rm -f "$HOME/.ssh/id_ed25519"
-
+            [ "$prod_code" = "200" ] || { echo "production unhealthy"; exit 1; }
+            echo "released $CNB_COMMIT to production"
   "crontab: */15 * * * *":
     - name: monitor-production-and-staging
       runner: { cpus: 2 }
@@ -129,20 +146,40 @@ $:
       runner: { cpus: 2 }
       docker: { image: node:20-bookworm-slim }
       stages:
-        - name: promote staging slot
+        - name: deploy staging slot
           script: |
             set -eu
-            echo "staging deploy via /opt/zeekr/deploy.sh, tag=$tag_name"
+            if [ "${CNB_DEPLOY_ENABLED:-}" != "true" ]; then echo "pre-cutover: skip"; exit 0; fi
+            install -m 700 -d "$HOME/.ssh"
+            printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/id_ed25519"
+            chmod 600 "$HOME/.ssh/id_ed25519"
+            ssh-keyscan -H "$DEPLOY_HOST" >> "$HOME/.ssh/known_hosts" 2>/dev/null
+            ssh -i "$HOME/.ssh/id_ed25519" -o StrictHostKeyChecking=yes \
+              "$DEPLOY_USER@$DEPLOY_HOST" "bash /opt/zeekr/deploy.sh $tag_name"
+            rm -f "$HOME/.ssh/id_ed25519"
 
   tag_deploy.production:
-    - name: promote-production-slot
+    - name: deploy-production-slot
       runner: { cpus: 2 }
       docker: { image: node:20-bookworm-slim }
       stages:
-        - name: promote prod slot
+        - name: deploy production slot
           script: |
             set -eu
-            echo "production deploy via /opt/zeekr/deploy-prod.sh, tag=$tag_name"
+            if [ "${CNB_DEPLOY_ENABLED:-}" != "true" ]; then echo "pre-cutover: skip"; exit 0; fi
+            install -m 700 -d "$HOME/.ssh"
+            printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/id_ed25519"
+            chmod 600 "$HOME/.ssh/id_ed25519"
+            ssh-keyscan -H "$DEPLOY_HOST" >> "$HOME/.ssh/known_hosts" 2>/dev/null
+            ssh -i "$HOME/.ssh/id_ed25519" -o StrictHostKeyChecking=yes \
+              "$DEPLOY_USER@$DEPLOY_HOST" "bash /opt/zeekr/deploy-prod.sh $tag_name"
+            rm -f "$HOME/.ssh/id_ed25519"
+            for i in $(seq 1 12); do
+              code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 https://penguin.www.xueyuanzong.top/ || true)
+              [ "$code" = "200" ] && { echo "production healthy ($tag_name)"; exit 0; }
+              sleep 10
+            done
+            echo "production unhealthy"; exit 1
 
   tag_deploy.contract-signoff:
     - name: contract-sign-off
